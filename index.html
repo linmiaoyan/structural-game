@@ -274,10 +274,11 @@
     <div id="hud" data-page-node-id="nUdzYZd06cFEiaBrFrD6Kt"></div>
     <div id="tip" data-page-node-id="SfcX0qav7XUv4SoQ4wluBO">加载配置中…</div>
     <div id="legend" data-page-node-id="pzVYegIJhvHiBh76YYdpvM">
-      <div class="row" data-page-node-id="2UE1PiB2kg2oCgEpIUvMOR"><span class="swatch" style="background:#e0483a" data-page-node-id="2yMfPvbVS89wi2tY8OfFCS"></span>受拉 / 临界</div>
-      <div class="row" data-page-node-id="lt2VyDBTbqftpSjtR1BaXp"><span class="swatch" style="background:#2e7de8" data-page-node-id="N8f3VEvfFWrgDU9tS2Gio7"></span>受压 / 临界</div>
+      <div class="row" data-page-node-id="2UE1PiB2kg2oCgEpIUvMOR"><span class="swatch" style="background:#e0483a" data-page-node-id="2yMfPvbVS89wi2tY8OfFCS"></span>受拉 (红色)</div>
+      <div class="row" data-page-node-id="lt2VyDBTbqftpSjtR1BaXp"><span class="swatch" style="background:#2563eb" data-page-node-id="N8f3VEvfFWrgDU9tS2Gio7"></span>受压 (蓝色)</div>
+      <div class="row"><span class="swatch" style="background:#d98a12"></span>近屈曲 / 临界 (橙黄)</div>
       <div class="row" data-page-node-id="TQSDEvTI8fddDXazjsBdHI"><div class="bar" data-page-node-id="NngJ9b5tQq8W4gQnqCPbbo"></div></div>
-      <div class="row" style="color:var(--muted)" data-page-node-id="ET1ZfzqZ9FQm3feIi5MPx4">安全 → 危险</div>
+      <div class="row" style="color:var(--muted)" data-page-node-id="ET1ZfzqZ9FQm3feIi5MPx4">安全 → 危险 (加深/高亮)</div>
       <div class="row" style="margin-top:4px"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;box-sizing:border-box;border:3.5px solid #f0c86e;flex:none"></span>胶合节点（刚接，抗弯）</div>
     </div>
     <div id="result" data-page-node-id="M1YMN0IHHbV1atiIbNg8UO"></div>
@@ -831,9 +832,17 @@ function satisfyGluedAngle(O, A, B, cos0, k){
   const W=wA*(gAx*gAx+gAy*gAy)+wB*(gBx*gBx+gBy*gBy)+wO*(gOx*gOx+gOy*gOy);
   if (W<1e-9) return;
   const lm=-C/W*k;
-  if (wA){ A.x+=lm*wA*gAx; A.y+=lm*wA*gAy; }
-  if (wB){ B.x+=lm*wB*gBx; B.y+=lm*wB*gBy; }
-  if (wO){ O.x+=lm*wO*gOx; O.y+=lm*wO*gOy; }
+  // 限制单帧修正上限，防止近共线或极端冲击时位移过大引发发散
+  const maxShift = 12.0;
+  const dxA = Math.max(-maxShift, Math.min(maxShift, lm*wA*gAx));
+  const dyA = Math.max(-maxShift, Math.min(maxShift, lm*wA*gAy));
+  const dxB = Math.max(-maxShift, Math.min(maxShift, lm*wB*gBx));
+  const dyB = Math.max(-maxShift, Math.min(maxShift, lm*wB*gBy));
+  const dxO = Math.max(-maxShift, Math.min(maxShift, lm*wO*gOx));
+  const dyO = Math.max(-maxShift, Math.min(maxShift, lm*wO*gOy));
+  if (wA){ A.x+=dxA; A.y+=dyA; }
+  if (wB){ B.x+=dxB; B.y+=dyB; }
+  if (wO){ O.x+=dxO; O.y+=dyO; }
 }
 
 /* 质量体系：节点质量 = 基础质量(连接件自重) + 各相连构件质量的一半；
@@ -980,10 +989,23 @@ function physicsStep(){
   checkBreakage();
 }
 
+function effectiveBreakStrain(bm){
+  const mat = MATERIALS[bm.mat];
+  if (!mat) return 0.06;
+  const strain = beamStrain(bm);
+  if (strain >= 0) return mat.breakStrain; // 受拉：使用标准断裂应变
+  // 受压：长细比欧拉屈曲折减
+  const cf = typeof mat.compressFactor === 'number' ? mat.compressFactor : 0.70;
+  const slenderness = Math.sqrt(100 / Math.max(20, bm.rest));
+  return Math.min(mat.breakStrain, mat.breakStrain * cf * slenderness);
+}
+
 function checkBreakage(){
   for (const bm of beams){
     if (bm.broken || bm.payloadCable) continue;
-    if (Math.abs(beamStrain(bm)) > MATERIALS[bm.mat].breakStrain) bm.broken = true;
+    const strain = beamStrain(bm);
+    const limit = effectiveBreakStrain(bm);
+    if (Math.abs(strain) > limit) bm.broken = true;
   }
 }
 
@@ -1543,7 +1565,11 @@ function updateTemplateButtons(){
 function stressColor(bm){
   const s = beamStrain(bm);
   const m = MATERIALS[bm.mat];
-  const intensity = Math.min(1, Math.abs(s) / m.breakStrain);
+  const limit = effectiveBreakStrain(bm);
+  const intensity = Math.min(1, Math.abs(s) / limit);
+  if (intensity >= 0.82) {
+    return '#d98a12'; // 接近断裂/屈曲临界，高亮橙黄色警告
+  }
   const light = 58 - intensity * 30;
   return s >= 0 ? `hsl(8, 85%, ${light}%)` : `hsl(212, 85%, ${light}%)`;
 }
@@ -1730,8 +1756,16 @@ function updateHUD(){
   if (t3Active()){ t3UpdateHUD(); return; }
   const structBeams = beams.filter(b => !b.payloadCable);
   const broken = structBeams.filter(b => b.broken).length;
-  let maxStress = 0;
-  for (const b of structBeams){ if (!b.broken){ const s = Math.abs(beamStrain(b)) / MATERIALS[b.mat].breakStrain; if (s > maxStress) maxStress = s; } }
+  let maxStress = 0, tensionCount = 0, compressionCount = 0;
+  for (const b of structBeams){
+    if (!b.broken){
+      const strain = beamStrain(b);
+      if (strain > 0.0008) tensionCount++;
+      else if (strain < -0.0008) compressionCount++;
+      const s = Math.abs(strain) / effectiveBreakStrain(b);
+      if (s > maxStress) maxStress = s;
+    }
+  }
   const stateText = { building:'建造中', testing:'测试中', pass:'已通关', fail:'已失败' }[levelState];
   const hud = document.getElementById('hud');
   let extra = '';
@@ -1755,8 +1789,9 @@ function updateHUD(){
   hud.innerHTML =
     `<div class="hrow"><span class="hstate ${levelState}"></span><b>${stateText}</b></div>` +
     `<div class="divider"></div>` +
-    `<div class="hstat"><span>应力</span><b style="color:${maxStress >= 0.85 ? 'var(--bad)' : maxStress >= 0.6 ? 'var(--warn)' : ''}">${Math.round(maxStress*100)}%</b></div>` +
-    `<div class="hstat"><span>断裂</span><b style="color:${broken ? 'var(--bad)' : 'var(--ok)'}">${broken}/${beams.length}</b></div>` + extra;
+    `<div class="hstat"><span>最大应力</span><b style="color:${maxStress >= 0.85 ? 'var(--bad)' : maxStress >= 0.6 ? 'var(--warn)' : ''}">${Math.round(maxStress*100)}%</b></div>` +
+    `<div class="hstat"><span>受力状态</span><b>拉${tensionCount} / 压${compressionCount}</b></div>` +
+    `<div class="hstat"><span>断裂数量</span><b style="color:${broken ? 'var(--bad)' : 'var(--ok)'}">${broken}/${beams.length}</b></div>` + extra;
 }
 
 function setTip(t){ document.getElementById('tip').textContent = t; }
@@ -1894,7 +1929,7 @@ function maybeSubmitProject(){
 }
 
 /* —— 排行榜 —— */
-function escHtml(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escHtml(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function openLeaderboard(){ document.getElementById('lbOverlay').classList.add('open'); loadLeaderboard(); }
 function loadLeaderboard(){
   const body = document.getElementById('lbBody');
@@ -2438,7 +2473,8 @@ function exportBlueprint(){
     g.beginPath(); g.moveTo(X(minX), gy); g.lineTo(X(maxX), gy); g.stroke();
     for (const x of [minX, maxX]){ g.beginPath(); g.moveTo(X(x), gy - 6); g.lineTo(X(x), gy + 6); g.stroke(); }
     g.fillStyle = '#1f2933'; g.font = '15px sans-serif'; g.textAlign = 'center';
-    const dimText = is3D ? `高塔高度 ${st.height} px · 底座跨度 ${st.span} px` : `跨度 ${Math.round((maxX - minX) / 10 * 10)} px`;
+    const spanVal = Math.round(maxX - minX);
+    const dimText = is3D ? `高塔高度 ${st.height} px · 底座跨度 ${st.span} px` : `结构跨度 ${spanVal} px · 高度 ${st.height} px`;
     g.fillText(dimText, (X(minX) + X(maxX)) / 2, gy + 20);
   }
   // 标题栏
@@ -2790,8 +2826,8 @@ function t3Step(){
       const diff = ((d - c.rest) / d) * c.k;
       c.a.x += dx*diff*(wa/ws); c.a.y += dy*diff*(wa/ws); c.a.z = (c.a.z||0) + dz*diff*(wa/ws);
       c.b.x -= dx*diff*(wb/ws); c.b.y -= dy*diff*(wb/ws); c.b.z = (c.b.z||0) - dz*diff*(wb/ws);
-      /* 每帧累计"纠偏量" ≈ 该构件这一帧被压缩/拉伸的总趋势，正比于轴力，用它判欧拉屈曲 */
-      c.acc += (d - c.rest);
+      /* 最后一代约束时记录纠偏量，代表该帧稳态下的被轴向挤压/拉伸趋势，用于判断欧拉屈曲 */
+      if (it === T3CFG.iter - 1) c.acc = (d - c.rest);
     }
     /* 桌面接触 + 摩擦（底面只能停留在桌面上，滑动受摩擦阻尼） */
     for (const n of list){
@@ -3707,12 +3743,25 @@ document.getElementById('tExport').onclick = () => {
 
 document.getElementById('tImport').onclick = () => {
   try {
-    CONFIG = JSON.parse(document.getElementById('tJson').value);
+    const parsed = JSON.parse(document.getElementById('tJson').value);
+    if (!parsed || typeof parsed !== 'object'){
+      throw new Error('配置根对象无效');
+    }
+    if (!parsed.materials || typeof parsed.materials !== 'object' || !Object.keys(parsed.materials).length){
+      throw new Error('缺失有效的 materials 材料定义对象');
+    }
+    if (!parsed.physics || typeof parsed.physics !== 'object'){
+      throw new Error('缺失物理参数 physics 定义');
+    }
+    if (!Array.isArray(parsed.levels) || !parsed.levels.length){
+      throw new Error('levels 必须包含至少一个关卡配置');
+    }
+    CONFIG = parsed;
     processConfig();
     currentLevelIndex = 0;
     loadLevel(0);
-    setTip('配置已导入。');
-  } catch (err){ alert('JSON 格式错误：' + err.message); }
+    setTip('配置校验通过并成功导入。');
+  } catch (err){ alert('JSON 配置校验未通过：' + err.message); }
 };
 
 document.getElementById('tDownload').onclick = () => {
