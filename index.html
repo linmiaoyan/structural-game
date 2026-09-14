@@ -1,0 +1,3764 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="E8T73SpnmAAKhpRHyG4jtI">
+<head data-page-node-id="m6YsPF2NLRGeOzWFhMlXZl">
+<meta charset="UTF-8" data-page-node-id="91H3aZeVmhlQQ7rUnOdACl">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" data-page-node-id="lCosDhmiZ0oLDf6jsXRag3">
+<title>桥见未来 · 课堂结构挑战</title>
+
+<style>
+  :root{
+    --bg:#eef1f5; --panel:#ffffff; --panel2:#f7f8fa;
+    --ink:#1b2530; --muted:#66717f; --faint:#98a2ad;
+    --line:#e3e8ee; --line2:#d5dce5;
+    --accent:#2563eb; --accent-soft:#eaf1fe; --accent-line:#bfd3f8; --accent-ink:#1d4fd7;
+    --ok:#1f9d5c; --ok-soft:#e6f6ee;
+    --bad:#dc3c2f; --bad-soft:#fdeceb;
+    --warn:#d98a12; --warn-soft:#fcf3e1;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);overscroll-behavior:none}
+  button{font:inherit;border:none;background:none;padding:0;color:inherit;cursor:pointer;border-radius:8px}
+  button:disabled{cursor:not-allowed;opacity:.4}
+  button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  select{font:inherit;color:var(--ink)}
+  .ic{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px}
+  #app{display:flex;flex-direction:column;height:100vh}
+  /* ===== 顶部极简控制 ===== */
+  header{flex:none;display:flex;align-items:center;gap:10px;padding:7px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:20;height:46px}
+  .brand{display:flex;align-items:center;gap:7px;user-select:none}
+  .brand b{font-size:14px;font-weight:800;letter-spacing:.4px}
+  .brand em{font-style:normal;font-size:10.5px;color:var(--faint);letter-spacing:.7px}
+  #levelSelect{height:30px;min-width:150px;max-width:230px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:0 9px;font-size:12.5px;cursor:pointer;appearance:auto}
+  #levelSelect:hover{border-color:var(--accent-line)}
+  .sp{flex:1}
+  .vsep{width:1px;height:18px;background:var(--line);margin:0 2px;flex:none}
+  .seg{display:flex;align-items:center;gap:2px;padding:2px;background:#e9edf2;border-radius:8px}
+  .seg button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 13px;border-radius:6px;font-size:13px;color:var(--muted);white-space:nowrap}
+  .seg button:hover{color:var(--ink)}
+  .seg button.active{background:#fff;color:var(--accent-ink);font-weight:600;box-shadow:0 1px 2px rgba(16,24,40,.09)}
+  .seg button.primary{background:var(--accent);color:#fff;font-weight:600}
+  .seg button.primary:hover{background:#1c56d4;color:#fff}
+  .tb{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;font-size:12.5px;color:var(--ink);border:1px solid transparent;border-radius:8px;white-space:nowrap}
+  .tb:hover{background:var(--panel2);border-color:var(--line)}
+  .tb.soft{border-color:var(--line);background:#fff}
+  .tb.quake.active{background:var(--warn-soft);border-color:#e6c98d;color:#965e00}
+  .descClip{display:none}
+  /* ===== 工作区：画布 + 左侧工具栏 + 悬浮层 ===== */
+  main{position:relative;flex:1;min-height:0;overflow:hidden;background:var(--panel)}
+  canvas{display:block;width:calc(100% - 62px);height:100%;margin-left:62px;touch-action:none;cursor:crosshair;background:#fff}
+  #rail{position:absolute;inset:0 auto 0 0;width:62px;background:var(--panel2);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:14px;padding:12px 8px;z-index:8;overflow-y:auto}
+  .rg{display:flex;flex-direction:column;gap:4px}
+  .rgTitle{font-size:10px;color:var(--faint);letter-spacing:1.4px;text-align:center;margin:2px 0 3px}
+  .rail{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;border-radius:8px;border:1px solid transparent;color:var(--muted);font-size:10.5px;width:100%}
+  .rail .ic{width:17px;height:17px}
+  .rail:hover{background:#fff;border-color:var(--line);color:var(--ink)}
+  .rail.active{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);font-weight:600}
+  body.in-test #rail{opacity:.45;pointer-events:none}
+  /* 材料托盘（画布顶部悬浮） */
+  #matTray{position:absolute;top:10px;left:72px;right:252px;display:flex;align-items:center;gap:6px;min-width:0;z-index:4}
+  #matTray .matCap{font-size:10.5px;color:var(--faint);letter-spacing:1.4px;flex:none}
+  #matGroup{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:3px;scrollbar-width:none;min-width:0;flex:1}
+  #matGroup::-webkit-scrollbar{display:none}
+  body.in-test #matTray{display:none}
+  .mat{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 8px;border:1px solid var(--line);background:rgba(255,255,255,.94);border-radius:6px;font-size:12px;white-space:nowrap;color:var(--ink);flex:none}
+  .mat:hover{border-color:var(--accent-line)}
+  .mat.active{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);font-weight:600}
+  .mat .swatch{width:10px;height:10px;border-radius:3px;border:1px solid rgba(0,0,0,.08);flex:none}
+  .mat .nm{max-width:74px;overflow:hidden;text-overflow:ellipsis}
+  .mat .cnt{font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:12px;text-align:right}
+  .mat.active .cnt{color:var(--accent-ink)}
+  /* ===== 实时评分 HUD（测试时跳动） ===== */
+  #scoreHud{position:absolute;top:10px;left:72px;width:236px;background:rgba(255,255,255,.93);border:1px solid var(--line);
+    border-radius:10px;padding:9px 11px 10px;z-index:6;box-shadow:0 3px 14px rgba(16,24,40,.07);backdrop-filter:blur(6px);display:none}
+  body.in-test #scoreHud{display:block}
+  #scoreHud .scHead{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+  #scoreHud .scVal{font-size:29px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.5px;transition:color .18s}
+  #scoreHud .scVal.bump{animation:scbump .22s ease-out}
+  @keyframes scbump{0%{transform:scale(1)}45%{transform:scale(1.13)}100%{transform:scale(1)}}
+  #scoreHud .scUnit{font-size:11px;color:var(--faint)}
+  #scoreHud .scGrade{margin-left:auto;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:#eef1f5;color:var(--muted)}
+  #scoreHud .scGrade.g1{background:var(--ok-soft);color:#0f7a45}
+  #scoreHud .scGrade.g2{background:var(--accent-soft);color:var(--accent-ink)}
+  #scoreHud .scGrade.g3{background:var(--warn-soft);color:#965e00}
+  #scoreHud .scGrade.g4{background:var(--bad-soft);color:#b3271c}
+  #scoreHud .scRow{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);margin-top:4px}
+  #scoreHud .scRow .nm{width:52px;flex:none}
+  #scoreHud .scRow .tr{flex:1;height:5px;background:#e9edf2;border-radius:3px;overflow:hidden}
+  #scoreHud .scRow .fl{height:100%;border-radius:3px;transition:width .16s linear,background .16s}
+  #scoreHud .scRow .vv{width:26px;text-align:right;font-variant-numeric:tabular-nums;flex:none}
+  #scoreHud.frozen .scRow .fl{transition:none}
+  /* 结算面板里的分项明细 */
+  #scoreBreak{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line2);font-size:12px}
+  #scoreBreak .sbRow{display:flex;align-items:center;gap:8px;margin:3px 0}
+  #scoreBreak .sbRow .nm{width:74px;color:var(--muted);flex:none}
+  #scoreBreak .sbRow .tr{flex:1;height:6px;background:#eef1f5;border-radius:3px;overflow:hidden}
+  #scoreBreak .sbRow .fl{height:100%;border-radius:3px}
+  #scoreBreak .sbRow .vv{width:30px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  #scoreBreak .sbTip{margin-top:6px;color:var(--muted);font-size:11.5px;line-height:1.6}
+  /* HUD 精简信息 */
+  #hud{position:absolute;top:10px;right:10px;min-width:112px;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:12px;line-height:1.55;z-index:5;box-shadow:0 2px 10px rgba(16,24,40,.05);backdrop-filter:blur(6px)}
+  #hud b{color:var(--ink);font-variant-numeric:tabular-nums}
+  #hud .hrow{display:flex;align-items:center;gap:6px;white-space:nowrap}
+  #hud .hstate{width:7px;height:7px;border-radius:50%;background:#98a2ad;flex:none;display:inline-block}
+  #hud .hstate.building{background:#98a2ad}
+  #hud .hstate.testing{background:var(--accent)}
+  #hud .hstate.pass{background:var(--ok)}
+  #hud .hstate.fail{background:var(--bad)}
+  #hud .hstat{display:flex;justify-content:space-between;gap:14px;color:var(--muted);white-space:nowrap}
+  #hud .divider{height:1px;background:var(--line);margin:4px 0}
+  /* 提示 */
+  #tip{position:absolute;left:72px;bottom:12px;max-width:52%;background:rgba(27,37,48,.86);color:#fff;font-size:12.5px;padding:7px 12px;border-radius:8px;line-height:1.5;z-index:5;pointer-events:none}
+  #legend{position:absolute;right:10px;bottom:12px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:11.5px;display:none;z-index:5;box-shadow:0 2px 10px rgba(16,24,40,.05);backdrop-filter:blur(6px)}
+  #legend .row{display:flex;align-items:center;gap:6px;margin:2px 0;white-space:nowrap}
+  #legend .swatch{width:11px;height:11px;border-radius:3px;flex:none}
+  #legend .bar{width:80px;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--ok),#d8b72a,var(--bad))}
+  /* 画布悬浮快捷键 */
+  #quickdock{position:absolute;right:10px;bottom:12px;display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:8px;padding:4px;box-shadow:0 2px 10px rgba(16,24,40,.07);backdrop-filter:blur(6px);z-index:6}
+  body.in-test #quickdock{display:none}
+  .dock{width:33px;height:33px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;color:var(--muted)}
+  .dock .ic{width:16px;height:16px}
+  .dock:hover{background:var(--panel2);color:var(--ink)}
+  .dock:disabled{opacity:.32}
+  .dock:disabled:hover{background:none;color:var(--muted)}
+  #quickdock .vsep{margin:0 3px}
+  #result{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);min-width:300px;max-width:352px;
+    background:#fff;border-radius:10px;display:none;pointer-events:none;box-shadow:0 12px 32px rgba(16,24,40,.18);z-index:9;overflow:hidden}
+  #result .rsText{padding:12px 18px;font-size:17px;font-weight:800;text-align:center;letter-spacing:.6px;color:#fff;line-height:1.4}
+  #result.pass .rsText{background:var(--ok)}
+  #result.fail .rsText{background:var(--bad)}
+  #result #scoreBreak{padding:4px 16px 14px;border-top:none;margin-top:0}
+  /* ===== 教师面板 ===== */
+  #teacherPanel{position:absolute;left:62px;right:0;bottom:0;background:rgba(255,255,255,.99);border-top:1px solid var(--line);border-left:1px solid var(--line);padding:14px 16px;font-size:13px;transform:translateY(102%);transition:transform .22s ease;box-shadow:0 -6px 18px rgba(16,24,40,.10);max-height:64vh;overflow:auto;border-radius:8px 0 0 0;z-index:30}
+  #teacherPanel.open{transform:translateY(0)}
+  #teacherPanel h3{margin:0 0 10px;font-size:15px}
+  #teacherPanel h4{margin:14px 0 8px;font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+  #teacherPanel .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:9px}
+  #teacherPanel .matgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:9px}
+  #teacherPanel label{display:block;color:var(--muted);margin-bottom:4px;font-size:12px}
+  #teacherPanel input,#teacherPanel textarea,#teacherPanel select{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:13px;background:#fff;color:var(--ink)}
+  #teacherPanel textarea{min-height:80px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+  #teacherPanel .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  #teacherPanel .actions button,#reportBox .rpBtns button,#teacherPanel .tabBtn{border:1px solid var(--line);background:#fff;padding:7px 12px;font-size:13px;color:var(--ink);border-radius:6px}
+  #teacherPanel button:hover,#reportBox .rpBtns button:hover{border-color:var(--accent-line);color:var(--accent-ink)}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .tabs .tabBtn.active{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);font-weight:600}
+  .tab{display:none}.tab.active{display:block}
+  .small{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+  /* ===== 评价报告 ===== */
+  #reportOverlay{position:fixed;inset:0;background:rgba(27,37,48,.42);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:20px;overflow:auto}
+  #reportOverlay.open{display:flex}
+  #reportBox{background:#fff;border-radius:10px;padding:16px 20px;max-width:800px;width:100%;box-shadow:0 18px 44px rgba(16,24,40,.22);border:1px solid var(--line);margin:auto}
+  .rpTop{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .rpTop h3{margin:0;font-size:15px;text-align:center;flex:1;min-width:200px}
+  .rpBtns{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+  .rpBtns button{font-size:12.5px}
+  .rpBtns input{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:13px;width:86px}
+  #rubricTable{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+  #rubricTable th,#rubricTable td{border:1px solid var(--line2);padding:7px 9px;text-align:center;vertical-align:middle}
+  #rubricTable th{background:#f3f5f8;font-weight:700;color:var(--ink)}
+  #rubricTable td.item{text-align:left;line-height:1.5;min-width:260px}
+  .tagAuto{display:inline-block;font-size:10px;padding:0 5px;border-radius:5px;margin-left:5px;background:var(--accent-soft);color:var(--accent-ink);border:1px solid var(--accent-line);font-weight:400}
+  .rated-cell{cursor:pointer;min-width:54px}
+  .rated-good{background:var(--ok-soft)}.rated-ok{background:var(--warn-soft)}.rated-bad{background:var(--bad-soft)}
+  .ev{display:block;font-size:11px;color:var(--muted);margin-top:3px;font-weight:400;line-height:1.55}
+  .rpNote{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.8;border-top:1px dashed var(--line);padding-top:10px}
+  @media print{
+    body *{visibility:hidden}
+    #reportOverlay{display:block!important;position:static;background:none;padding:0;overflow:visible}
+    #reportOverlay *{visibility:visible}
+    #reportBox{box-shadow:none;max-width:100%;width:100%;border:none}
+    .rpBtns{display:none}
+  }
+  /* ===== 进入项目：填写姓名 / 班级 ===== */
+  #entryOverlay{position:fixed;inset:0;background:rgba(27,37,48,.52);display:none;align-items:center;justify-content:center;z-index:80;padding:20px}
+  #entryOverlay.open{display:flex}
+  #entryBox{background:#fff;border-radius:12px;padding:22px 24px 20px;width:100%;max-width:392px;box-shadow:0 18px 44px rgba(16,24,40,.30);border:1px solid var(--line)}
+  #entryBox .enMark{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  #entryBox .enMark b{font-size:16px;font-weight:800;letter-spacing:.4px}
+  #entryBox .enMark em{font-style:normal;font-size:10.5px;color:var(--faint);letter-spacing:.7px}
+  #entryBox h3{margin:0 0 5px;font-size:15px}
+  #entryBox .enSub{color:var(--muted);font-size:12.5px;line-height:1.65;margin:0 0 6px}
+  #entryBox label{display:block;color:var(--muted);font-size:12px;margin:12px 0 5px}
+  #entryBox input{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+  #entryBox input:focus{border-color:var(--accent-line)}
+  #entryGo{margin-top:18px;width:100%;background:var(--accent);color:#fff;font-weight:700;font-size:14px;padding:11px;border-radius:8px}
+  #entryGo:hover{background:#1c56d4}
+  #entryBox .enHint{margin-top:10px;font-size:11px;color:var(--faint);line-height:1.6;text-align:center}
+  /* ===== 排行榜 ===== */
+  #lbOverlay{position:fixed;inset:0;background:rgba(27,37,48,.42);display:none;align-items:flex-start;justify-content:center;z-index:70;padding:20px;overflow:auto}
+  #lbOverlay.open{display:flex}
+  #lbBox{background:#fff;border-radius:10px;padding:16px 20px;max-width:700px;width:100%;box-shadow:0 18px 44px rgba(16,24,40,.22);border:1px solid var(--line);margin:auto}
+  #lbBox .lbTop{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  #lbBox .lbTop h3{margin:0;font-size:15px;flex:1;min-width:150px}
+  #lbBox .lbTop button{border:1px solid var(--line);background:#fff;padding:6px 12px;font-size:12.5px;border-radius:6px}
+  #lbBox .lbTop button:hover{border-color:var(--accent-line);color:var(--accent-ink)}
+  #lbTable{width:100%;border-collapse:collapse;font-size:13px}
+  #lbTable th,#lbTable td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:center}
+  #lbTable th{background:#f3f5f8;color:var(--ink);font-weight:700;font-size:12px}
+  #lbTable td.nm{text-align:left;font-weight:600}
+  #lbTable td.ctr{text-align:center}
+  #lbTable tr.me{background:var(--accent-soft)}
+  #lbTable .rank{font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+  #lbTable .rank.r1{color:#c9962a}#lbTable .rank.r2{color:#8b97a3}#lbTable .rank.r3{color:#b07a4a}
+  #lbBox .lbNote{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.7}
+  #lbBox .lbEmpty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13px}
+  /* ===== 轻提示 ===== */
+  #submitToast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:rgba(27,37,48,.93);color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;z-index:90;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:82%;line-height:1.5}
+  #submitToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (max-width:880px){
+    .brand em{display:none}
+    #matTray{right:158px}
+    #levelSelect{min-width:132px}
+    header{gap:7px;padding:7px 8px}
+  }
+</style>
+
+</head>
+<body data-page-node-id="gvhAYooNpV4VuBMoUFRCAy">
+<div id="app" data-page-node-id="U72VtHPgARsYEUOBqCkEj8">
+  <header data-page-node-id="ZuFGUBh8omu9N4xubilkW3">
+      <div class="topbar" style="display:contents">
+    <span class="brand">
+      <svg class="mark" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect width="18" height="18" rx="5" fill="#2563eb"/><g stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M3.6 11.6h10.8M5.6 11.6v2.9M12.4 11.6v2.9M5.7 7.9 9 4.6l3.3 3.3"/></g></svg>
+      <b>桥见未来</b><em>课堂结构挑战</em>
+    </span>
+    <select id="levelSelect" title="选择关卡"></select>
+    <span id="levelName" class="descClip"></span>
+    <span class="sp"></span>
+    <div class="seg" role="group" aria-label="模式">
+      <button id="btnBuild" class="active" title="建造模式：拖画构件、点节点固定"><svg class="ic"><path d="M17 3.3a2.7 2.7 0 0 1 3.7 3.7L7.6 20.1 3 21l.9-4.6Z"/><path d="m14.8 5.5 3.7 3.7"/></svg>建造</button>
+      <button id="btnTest" class="primary" title="测试：施加重物、观察应力与断裂"><svg class="ic"><path d="M8 5.2v13.6L19 12Z" fill="currentColor" stroke="none"/></svg>测试</button>
+    </div>
+    <button id="btnQuake" class="tb soft quake" disabled title="地震：测试中开启，持续横向晃动"><svg class="ic"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>地震</button>
+    <span class="vsep"></span>
+    <button id="btnReport" class="tb" title="过程性评价报告"><svg class="ic"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9.5h17M3.5 15h17M9.5 3.5v17"/></svg>评价</button>
+    <button id="btnLeaderboard" class="tb" title="排行榜：按棉花糖塔最高值排名"><svg class="ic"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>排行榜</button>
+    <button id="btnTeacher" class="tb" title="教师设置：关卡 / 材料参数 / 评价阈值"><svg class="ic"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1.5 14h5M9.5 8h5M17.5 16h5"/></svg>教师</button>
+  </div>
+</header>
+  <main data-page-node-id="dDjkWW7JHesDhOpXUKiFMm">
+    <canvas id="game" data-page-node-id="biGrCoNwR2sAeDggQu7fUW"></canvas>
+    <aside id="rail">
+      <div class="rg">
+        <div class="rgTitle">工具</div>
+        <button id="btnToolBuild" class="rail active" title="建造：空白拖动连梁 · 单击节点固定/松开会改变锚点"><svg class="ic"><path d="M17 3.3a2.7 2.7 0 0 1 3.7 3.7L7.6 20.1 3 21l.9-4.6Z"/><path d="m14.8 5.5 3.7 3.7"/></svg>建造</button>
+        <button id="btnToolErase" class="rail" title="擦除：点击梁或节点删除并返还材料"><svg class="ic"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>擦除</button>
+      </div>
+      <div class="rg" id="tplGroup">
+        <div class="rgTitle">模板</div>
+        <button id="btnTempDeck" class="rail" title="桥面：两端锚点间快速铺平桥面"><svg class="ic"><path d="M4 18.5h16M7 18.5v-7M17 18.5v-7M7 11.5h10M10 11.5V8a2 2 0 0 1 4 0v3.5"/></svg>桥面</button>
+        <button id="btnTempTruss" class="rail" title="桁架：三角形受力骨架"><svg class="ic"><path d="m5 19 7-12 7 12"/><path d="M5 19h14"/></svg>桁架</button>
+        <button id="btnTempCable" class="rail" title="悬索：主缆受拉吊起桥面"><svg class="ic"><path d="M3 7.5c3.4-3.6 14.6-3.6 18 0"/><path d="M6.2 10.8 8 18.5M12 8.9v9.6M17.8 10.8 16 18.5"/></svg>悬索</button>
+        <button id="btnTempTower" class="rail" title="高塔：宽基座 + X 斜撑的起步塔"><svg class="ic"><path d="M8.5 21V7.5l3.5-2.8 3.5 2.8V21"/><path d="M8.5 13h7M8.5 17h7M8.5 21h7"/></svg>高塔</button>
+        <button id="btnTempCant" class="rail" title="悬臂：单侧生根、向右挑出的桁架"><svg class="ic"><path d="M4 21V4"/><path d="M4 7h14"/><path d="M18 7v5.5"/><circle cx="18" cy="15.8" r="2.4"/></svg>悬臂</button>
+      </div>
+    </aside>
+    <div id="matTray"><span class="matCap">材料</span><div id="matGroup" class="mats"></div></div>
+    <div id="quickdock">
+      <button id="btnUndo" class="dock" title="撤销"><svg class="ic"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg></button>
+      <button id="btnRedo" class="dock" title="重做"><svg class="ic"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg></button>
+      <button id="btnReset" class="dock" title="复位：回到建造姿态"><svg class="ic"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+      <button id="btnClear" class="dock" title="清空重来"><svg class="ic"><path d="M3 6h18"/><path d="M19 6v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"/><path d="M10 11v6M14 11v6"/></svg></button>
+      <span class="vsep"></span>
+      <button id="btnBlueprint" class="dock" title="导出设计图样（计入图样表达评价）"><svg class="ic"><path d="M14 3H6a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 6 21h12a1.5 1.5 0 0 0 1.5-1.5V8Z"/><path d="M14 3v5h5"/><path d="M9 12.5h6M9 16h6"/></svg></button>
+    </div>
+
+    <div id="scoreHud">
+      <div class="scHead">
+        <span class="scVal" id="scVal">0</span><span class="scUnit">分</span>
+        <span class="scGrade" id="scGrade">评分中</span>
+      </div>
+      <div id="scBars"></div>
+    </div>
+
+    <div id="hud" data-page-node-id="nUdzYZd06cFEiaBrFrD6Kt"></div>
+    <div id="tip" data-page-node-id="SfcX0qav7XUv4SoQ4wluBO">加载配置中…</div>
+    <div id="legend" data-page-node-id="pzVYegIJhvHiBh76YYdpvM">
+      <div class="row" data-page-node-id="2UE1PiB2kg2oCgEpIUvMOR"><span class="swatch" style="background:#e0483a" data-page-node-id="2yMfPvbVS89wi2tY8OfFCS"></span>受拉 / 临界</div>
+      <div class="row" data-page-node-id="lt2VyDBTbqftpSjtR1BaXp"><span class="swatch" style="background:#2e7de8" data-page-node-id="N8f3VEvfFWrgDU9tS2Gio7"></span>受压 / 临界</div>
+      <div class="row" data-page-node-id="TQSDEvTI8fddDXazjsBdHI"><div class="bar" data-page-node-id="NngJ9b5tQq8W4gQnqCPbbo"></div></div>
+      <div class="row" style="color:var(--muted)" data-page-node-id="ET1ZfzqZ9FQm3feIi5MPx4">安全 → 危险</div>
+      <div class="row" style="margin-top:4px"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;box-sizing:border-box;border:3.5px solid #f0c86e;flex:none"></span>胶合节点（刚接，抗弯）</div>
+    </div>
+    <div id="result" data-page-node-id="M1YMN0IHHbV1atiIbNg8UO"></div>
+    <div id="teacherPanel" data-page-node-id="rEZ9uFMeoL9WfRX4C1HAZk">
+      <h3 data-page-node-id="ihxvAHfXhpU2DiCQbfhXVO">教师设置</h3>
+      <div class="tabs" data-page-node-id="T8E7juLbUR6tkozdCvhRgY">
+        <button class="tabBtn active" data-tab="tLevel" data-page-node-id="LDqKCsd07zS7VJBLWYq7EK">关卡</button>
+        <button class="tabBtn" data-tab="tMats" data-page-node-id="AfhJMdmkV21x8hF0hmMiW4">材料参数</button>
+        <button class="tabBtn" data-tab="tScore">评分</button>
+        <button class="tabBtn" data-tab="tConfig" data-page-node-id="yi1qq6xAOAotvLqhDPeS3u">配置文档</button>
+      </div>
+      <div id="tLevel" class="tab active" data-page-node-id="FWXJ4RciArCBKDHYDyQQqw">
+        <div class="grid" data-page-node-id="4WbRT6n8nw42Okv0Ajwq2o">
+          <div data-page-node-id="mTcMPGKeITTtyeRvBbLOWg"><label data-page-node-id="bBzE1HDlRDwNEEQEs7pxjd">关卡名</label><input id="tName" type="text" data-page-node-id="JwNFqyhvfWspBHxXvB37X4"></div>
+          <div data-page-node-id="2yryKVIIMvO3Z2jFHGdEvG"><label data-page-node-id="ceqKHgXFihQoBDUeyVP9HS">关卡类型</label>
+            <select id="tType" data-page-node-id="vbwyZHucDfe5PzCATX0Hai">
+              <option value="bridge" data-page-node-id="z7PrOMWRNVNTTBZRj3NG3w">纸桥/桁架/悬索（承重）</option>
+              <option value="tower" data-page-node-id="ucafPegvIBzF6DNKMbZGIF">棉花糖高塔（高度）</option>
+              <option value="floating" data-page-node-id="XYE2CxPahuqvHP8ELt1rht">浮桥（浮力）</option>
+              <option value="cantilever" data-page-node-id="jAqRD7oSV49NSQW0gqGNj4">悬臂结构</option>
+            </select>
+          </div>
+          <div><label>难度分档</label>
+            <select id="tDifficulty">
+              <option value="easy">入门</option>
+              <option value="standard">标准</option>
+              <option value="hard">挑战</option>
+            </select>
+            <div class="small">难度会影响：载荷质量（更重/更轻）与材料库存（更少/更多）。默认标准档。</div>
+          </div>
+          <div data-page-node-id="wXHD1WCAfTn8XvEbvSAuhd"><label data-page-node-id="X7FmV4lVh6qXWTpBCmfb78">左锚点 X(%)</label><input id="tAx" type="number" step="5" min="0" max="100" data-page-node-id="QE7QArB06riUVPkRSi3mZe"></div>
+          <div data-page-node-id="abHU1ZhwxHtWp02qoK59G1"><label data-page-node-id="gYisHFpc3azAurVOCw4Y7c">右锚点 X(%)</label><input id="tBx" type="number" step="5" min="0" max="100" data-page-node-id="032E9Yyffvx9fgHcBldpYG"></div>
+          <div data-page-node-id="2mjoECUCuAKYQuI9XjsAPF"><label data-page-node-id="l0r6LhhbIWCDhuor0tmwDY">锚点高度(距地面)</label><input id="tAy" type="number" step="10" data-page-node-id="2TfrMPvRqkWgnrPmaxeHWi"></div>
+          <div data-page-node-id="aA2gGRQtEmiRHEoIShEvCP"><label data-page-node-id="6yBeocCanLkXDSa0HxObXJ">载重质量</label><input id="tMass" type="number" min="1" data-page-node-id="Q3Ca7rxGFvmNcDuuBrVTZx"></div>
+          <div data-page-node-id="bD5qhNXoqUF1aFVA7V3shv"><label data-page-node-id="GTE98qC0YSWqOMQjLCmjUA">载重延迟(帧)</label><input id="tDelay" type="number" min="0" data-page-node-id="H7ukAOsyvU9KsCcNFB7tGx"></div>
+          <div data-page-node-id="fIRWUlafJ2Mi6PIC7lFMu4"><label data-page-node-id="gRNuHELTvcFAwOTAajyDIZ">考核时间(帧)</label><input id="tHold" type="number" min="30" data-page-node-id="Abq2ltTKrsNRtvEV61UE0a"></div>
+          <div data-page-node-id="ut3KhKgszlER7MMOVzdJqu"><label data-page-node-id="wHl2IY6vLUCgzWdMK9eN9e">最大允许断裂比(%)</label><input id="tBroken" type="number" min="0" max="100" data-page-node-id="IWVpbyIxtBjPI8nXJEZBJa"></div>
+          <div id="tHeightWrap" style="display:none" data-page-node-id="kqwGmkVT5SNC5XltJ8dFu3"><label data-page-node-id="Br6Fvn4qbsthkxyzpEAfC6">目标高度(像素)</label><input id="tHeight" type="number" min="50" data-page-node-id="PMlQSg7LDhIt3JSKKCNYDv"></div>
+        </div>
+        <h4 data-page-node-id="helhZy3czF2fyL7rDTzOs8">本关材料库存</h4>
+        <div class="grid" id="tStockGrid" data-page-node-id="3VjjRAdu8fxHtB4Lx4qY0N"></div>
+        <div class="actions" data-page-node-id="M2T66YSdEZ537ZpHoPbv4s">
+          <button id="btnSolution" title="载入本关的参考答案结构（覆盖当前画布，仅教师操作；学生端不显示此按钮）" style="background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);font-weight:600">载入参考答案</button>
+          <button id="tApply" data-page-node-id="GAIQP2UXxG5sEhOyMJvoLV">应用为当前关卡</button>
+          <button id="tClose" data-page-node-id="TUrTskcsFXjui03luCfhMS">关闭</button>
+        </div>
+      </div>
+      <div id="tMats" class="tab" data-page-node-id="uWNJs5iD4hlpBNNOjt4GoW">
+        <div id="tMatsContainer" class="matgrid" data-page-node-id="5tdX9hxRIyOITjxll36MUf"></div>
+        <div class="actions" data-page-node-id="glCJnu9Xn4mIkdwoSJ1QSk">
+          <button id="tSaveMats" data-page-node-id="Nna0YEcBYyMsaZwaRcyiAF">保存材料参数到配置</button>
+        </div>
+      </div>
+      <div id="tScore" class="tab">
+        <div class="grid">
+          <div><label>安全余量权重</label><input id="twSafety" type="number" min="0" step="1"></div>
+          <div><label>刚度权重</label><input id="twStiff" type="number" min="0" step="1"></div>
+          <div><label>用料经济权重</label><input id="twEcon" type="number" min="0" step="1"></div>
+          <div><label>结构形式权重</label><input id="twForm" type="number" min="0" step="1"></div>
+          <div><label>功能达成权重</label><input id="twFunc" type="number" min="0" step="1"></div>
+        </div>
+        <div class="small">五项权重将加权合成为「综合评分」。权重之和建议为 100。</div>
+        <div class="actions">
+          <button id="tSaveScore">保存评分权重到配置</button>
+        </div>
+      </div>
+      <div id="tConfig" class="tab" data-page-node-id="1s0MqcLd5VFIiLchjgm0fv">
+        <label data-page-node-id="Dee0khZuOB3p25oGea6GVD">完整配置 JSON（可直接编辑，导入后覆盖所有材料和关卡）</label>
+        <textarea id="tJson"></textarea>
+        <div class="actions" data-page-node-id="DZcflDwwYcir5sAvRNUc66">
+          <button id="tExport" data-page-node-id="wBr8yxGhx5qJOBF2NgCPDA">导出当前配置 JSON</button>
+          <button id="tImport" data-page-node-id="k8W6yPZIF4OWazuDQYlzw8">导入 JSON</button>
+          <button id="tDownload" data-page-node-id="hlJv6a9bBxsQCQBHo3Dqnm">下载 materials.json</button>
+        </div>
+      </div>
+    </div>
+    <div id="reportOverlay">
+      <div id="reportBox">
+        <div class="rpTop">
+          <button id="rpClose">✕</button>
+          <h3>《结构与设计》过程性评价表</h3>
+          <div class="rpBtns">
+            <input id="rpName" placeholder="学生姓名">
+            <input id="rpClass" placeholder="班级">
+            <button id="rpPrint">打印</button>
+            <button id="rpExport">导出JSON</button>
+            <button id="rpSubmit" title="把本次评价数据提交到云端（完成后自动提交）">提交评价</button>
+            <button id="rpLb" title="查看排行榜">排行榜</button>
+            <button id="rpClear">清空记录</button>
+          </div>
+        </div>
+        <table id="rubricTable">
+          <thead>
+            <tr><th rowspan="2" style="width:52%">评价内容</th><th colspan="3">达成情况</th></tr>
+            <tr><th style="width:16%">优良</th><th style="width:16%">合格</th><th style="width:16%">不合格</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="rpNote">
+          <b>说明</b>　TA——技术意识，ET——工程思维，ID——创新设计，TD——图样表达，CM——物化能力。<br>
+          带「自动」标记的是机器根据设计过程数据（建造、测试、迭代、应力、材料利用率等）自动评价的结果；点击任意单元格可由教师手动修改，再点一次恢复自动评价。「导出设计图」按钮可将当前方案导出为图样（计入图样表达评价）。
+        </div>
+      </div>
+    </div>
+
+    <!-- 进入项目：填写姓名 / 班级 -->
+    <div id="entryOverlay">
+      <div id="entryBox">
+        <div class="enMark">
+          <svg class="mark" width="20" height="20" viewBox="0 0 18 18" aria-hidden="true"><rect width="18" height="18" rx="5" fill="#2563eb"/><g stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M3.6 11.6h10.8M5.6 11.6v2.9M12.4 11.6v2.9M5.7 7.9 9 4.6l3.3 3.3"/></g></svg>
+          <b>桥见未来</b><em>课堂结构挑战</em>
+        </div>
+        <h3>请填写你的姓名和班级</h3>
+        <p class="enSub">姓名与班级会随你的设计过程一起记录，用于过程性评价表与排行榜。</p>
+        <label>学生姓名</label>
+        <input id="entryName" placeholder="学生姓名" autocomplete="off">
+        <label>班级</label>
+        <input id="entryClass" placeholder="班级" autocomplete="off">
+        <button id="entryGo">进入挑战</button>
+        <div class="enHint">课堂测试可直接使用预填内容，点「进入挑战」即可。</div>
+      </div>
+    </div>
+
+    <!-- 排行榜 -->
+    <div id="lbOverlay">
+      <div id="lbBox">
+        <div class="lbTop">
+          <h3>排行榜 · 棉花糖高塔最高值</h3>
+          <button id="lbRefresh">刷新</button>
+          <button id="lbClose">关闭</button>
+        </div>
+        <table id="lbTable">
+          <thead>
+            <tr><th style="width:46px">名次</th><th>姓名</th><th style="width:112px">班级</th><th style="width:98px">最高值</th><th style="width:72px">评分</th><th style="width:122px">提交时间</th></tr>
+          </thead>
+          <tbody id="lbBody"></tbody>
+        </table>
+        <div class="lbNote">「最高值」＝ 桌面到棉花糖顶的最高高度（px）。数据来自云端提交记录；完成整个项目（全部关卡通过）后会自动提交，也可在「评价」表里手动提交。</div>
+      </div>
+    </div>
+
+    <div id="submitToast"></div>
+  </main>
+</div>
+<script>
+"use strict";
+
+/* ===================== 默认配置 ===================== */
+function defaultConfig(){
+  return {
+    _readme: "课堂结构挑战 · 材料与物理参数配置",
+    units: {
+      stiff: "刚度系数 0~1",
+      breakStrain: "断裂应变",
+      density: "线密度",
+      cable: "是否只能受拉",
+      width: "显示粗细",
+      maxSpan: "材料最大跨度(px)：单根构件跨不过的距离（纸/意面更短，钢/木更长）",
+      kind: "joint = 节点胶合材料（点击节点使用，不画梁）",
+      angleK: "胶合刚度：把交汇构件锁成刚接的程度 0~1",
+      notes: "真实依据"
+    },
+    physics: {
+      GRAVITY: { value: 0.32, note: "重力" },
+      DAMPING: { value: 0.99, note: "阻尼" },
+      ITER: { value: 8, note: "迭代次数" },
+      LATERAL: { value: 0.12, note: "塔类侧向失稳强度（模拟真实棉花糖塔高窄无斜撑会摇晃倒塌）：越大越容易侧倒。配合「连贯同向侧风」才能把无斜撑的塔真正剪塌" },
+      MAX_SPAN: { value: 340, note: "单根构件最大跨度(px)。模拟材料长度有限：现实中一张纸/一根意面跨不过大河，超长必须分段并设中间支撑/桥墩" },
+      MASS_DENSITY_K: { value: 0.01, note: "线密度→质量的换算系数：构件质量 = 长度 × 材料线密度 × 本系数。调大则结构自重更重（堆料更容易压垮自己）" },
+      MASS_NODE_BASE: { value: 0.6, note: "每个自由节点的基础质量（连接件自重），不含构件分摊的部分" },
+      MASS_PAYLOAD_K: { value: 1.0, note: "载荷质量系数：砝码质量 = payload.mass × 本系数。调大则砝码更重、承重挑战更难" },
+      BUOY_K: { value: 0.094, note: "浮力系数：浮桶浮力加速度 = 吃水深度 × 本系数 ÷ 浮桶总质量。调小则浮桶更容易下沉" },
+      LOAD_PRESS: { value: 0.9, note: "载荷接触刚度 0~1：每次约束迭代修正的穿透量比例。调小则砝码像浮在结构上（承重变简单），调大则接触更硬、承重挑战更难" }
+    },
+    rubric: {
+      _readme: "自动评价阈值：可按班级难度调整",
+      formsGood: 3, formsPass: 2,
+      triRatioGood: 0.35,
+      stressMarginGood: 0.85,
+      stockLeftGood: 0.30,
+      blueprintGood: 2, blueprintPass: 1
+    },
+    score: {
+      _readme: "实时综合评分权重（各项满分 100，加权求和为总分）。教师可按教学目标调整侧重；权重之和建议为 100。",
+      wSafety: 30, wStiff: 20, wEcon: 15, wForm: 15, wFunc: 20,
+      defRef: 70, note: "defRef = 刚度评分的允许变形基准(px)：结构最大节点位移达到该值时刚度项记 0 分。调小则对变形更严格。",
+      triRef: 0.45, triCountRef: 6,
+      stockRef: 0.30, note2: "triRef/triCountRef = 结构形式项的三角形占比 / 三角形个数满分线；stockRef = 用料项的剩余材料满分线。",
+      gradeGood: 85, gradeOk: 70, gradePass: 55,
+      failFactor: 0.45, note3: "failFactor = 测试失败时总分打的折扣（结构没过关，评分应明显低于通过者）。"
+    },
+    submit: {
+      _readme: "评价数据提交与排行榜。学生完成整个项目（全部关卡通过）后，自动把评价数据 POST 到 url；排行榜也从 url 拉取（url + '/all'）。",
+      url: "https://quickform.cn/api/r5a3ly81xx",
+      auto: true,
+      rankBy: "height"
+    },
+    difficulty: {
+      _readme: "难度分档：入门/标准/挑战。影响载荷质量与材料库存（用来做课堂差异化）。",
+      default: "standard",
+      tiers: {
+        easy: { name: "入门", payloadMul: 0.75, stockMul: 1.25 },
+        standard: { name: "标准", payloadMul: 1.0, stockMul: 1.0 },
+        hard: { name: "挑战", payloadMul: 1.25, stockMul: 0.85 }
+      }
+    },
+    materials: {
+      paper: { name: "纸（折叠成梁）", color: "#e8dcc0", breakStrain: 0.05, stiff: 0.22, density: 0.08, width: 7, cable: false, maxSpan: 220, notes: "纸的拉伸强度不低，但受压极易屈曲。" },
+      wood: { name: "木梁", color: "#a9744f", breakStrain: 0.08, stiff: 0.50, density: 0.25, width: 6, cable: false, maxSpan: 380, notes: "松木/桐木条。" },
+      steel: { name: "钢梁", color: "#7a8a99", breakStrain: 0.12, stiff: 0.75, density: 0.60, width: 5, cable: false, maxSpan: 520, notes: "低碳钢。" },
+      cable: { name: "钢索", color: "#d8a657", breakStrain: 0.25, stiff: 0.40, density: 0.18, width: 3, cable: true, notes: "只能受拉。" },
+      stick: { name: "意面/木棍", color: "#c79a6b", breakStrain: 0.06, stiff: 0.48, density: 0.18, width: 5, cable: false, maxSpan: 260, notes: "对应干意面/一次性木筷：E≈6~10 GPa，细长杆易失稳屈曲，单根能跨越的长度有限。" },
+      tape: { name: "胶带", color: "#f0c86e", breakStrain: 0.22, stiff: 0.15, density: 0.05, width: 4, cable: true, kind: "joint", angleK: 0.45, notes: "节点胶合材料：选它后「点击节点」把交汇的构件粘牢——连接从铰接(可转动、一受力就散)变成刚接(抗弯)。胶带缠的节点比热熔胶软，允许轻微转动。真实里胶带正是用来把意面交叉点缠紧的。" },
+      glue: { name: "粘胶/热熔胶", color: "#f4a3b8", breakStrain: 0.04, stiff: 0.85, density: 0.12, width: 4, cable: false, kind: "joint", angleK: 0.85, notes: "节点胶合材料：点节点涂胶，热熔胶固化后很硬，节点完全锁死（刚接刚度比胶带高）。适合需要传递弯矩的悬臂/塔节点。" },
+      string: { name: "细绳", color: "#d9b8a2", breakStrain: 0.18, stiff: 0.28, density: 0.06, width: 2, cable: true, notes: "只能受拉。" }
+    },
+    levels: [
+      { name: "课程 0：纸桥承重", type: "bridge", desc: "峡谷很宽，单张纸的长度根本够不到对岸——材料长度有限，两点拉不通，必须分段。先把纸分段连起来，再给交汇节点「上胶」让桥面不散架，设桥墩/桁架把桥面撑住，最后让砝码落桥而不触地。", stock: { paper: 26, tape: 12 }, anchors: [{x:0.16,y:-210},{x:0.84,y:-210}], payload: {x:0.5,y:-470,mass:5,delay:50,radius:15,holdFrames:300}, pass: {maxBrokenRatio:0.5, payloadGround:false} },
+      { name: "课程 1：棉花糖高塔（经典挑战）", type: "tower", desc: "三维挑战（官方 Marshmallow Challenge 规则）：20 根意面 + 胶带 + 细绳，把唯一一颗棉花糖架到塔顶。棉花糖像「粘胶」一样粘在塔顶、把顶部几根杆件连成一体，但它比看起来重得多——塔越高越窄，越容易被它压得失稳倒下。点「测试」= 松手：没有重物砸下来，只看塔能不能自己站住；只要塔不倒就算过关，系统记录你搭出的最高值（桌面→棉花糖顶的高度）。拖动空白处可旋转视角看三维形体。", stock: { stick: 20, tape: 8, string: 6 }, anchors: [], targetHeight: 240, payload: {x:0.5,y:-999,mass:1,delay:0,radius:11,holdFrames:300}, pass: {maxBrokenRatio:0.5} },
+      { name: "课程 2：设计并搭建浮桥", type: "floating", desc: "在三只浮桶上架桥，把木棍分段搭到桶顶并上胶固定。浮桶的浮力有限：工程师(砝码)站上桥面后，浮桶会明显下沉——用料越多桥越重，沉得越深。桥面没入水中或浮桶沉到河床都算失败。", stock: { stick: 18, tape: 8, string: 8 }, anchors: [], buckets: [{x:0.25,y:0},{x:0.5,y:0},{x:0.75,y:0}], waterY: -70, payload: {x:0.5,y:-300,mass:6,delay:80,radius:18,holdFrames:220}, pass: {maxBrokenRatio:0.5, payloadGround:false, maxSink:20} },
+      { name: "课程 3：悬臂结构的稳定性", type: "cantilever", desc: "像塔吊一样：把悬臂从左侧高台向右挑出，末端用钢索悬挂砝码。固定端需要同一竖直线上、一上一下两个固定点（就像木条夹在桌沿）才抗得住弯矩；悬臂根部弯矩最大——汇交节点上胶（刚接）是关键。载荷从挂钩点上方垂下，会真实拉扯悬臂端部，而不是凭空落在半空中。", stock: { stick: 20, glue: 3, string: 4, tape: 5 }, anchors: [{x:0.2,y:-150},{x:0.2,y:-240}], payload: {x:0.45,y:-999,mass:3,delay:0,radius:15,holdFrames:220,cableLen:12}, pass: {maxBrokenRatio:0.4, payloadGround:false} }
+    ]
+  };
+}
+
+/* ===================== 全局状态 ===================== */
+let CONFIG = null;
+let MATERIALS = {};
+let LEVELS = [];
+const CFG = { GRAVITY: 0.32, DAMPING: 0.99, ITER: 8, NODE_HIT: 16, BEAM_HIT: 8, CLICK_EPS: 8, HISTORY_MAX: 24, LATERAL: 0.12, MAX_SPAN: 340,
+  MASS_DENSITY_K: 0.01, MASS_NODE_BASE: 0.6, MASS_PAYLOAD_K: 1.0, BUOY_K: 0.094, LOAD_PRESS: 0.9 };
+let difficultyKey = 'standard';
+
+function makeLevel(obj){
+  const stock = {};
+  for (const k of Object.keys(MATERIALS)) stock[k] = (obj.stock && obj.stock[k]) || 0;
+  return {
+    name: obj.name,
+    type: obj.type || 'bridge',
+    desc: obj.desc,
+    free: !!obj.free,
+    stock,
+    anchors: obj.anchors || [],
+    buckets: obj.buckets || [],
+    waterY: obj.waterY ?? -10,
+    targetHeight: obj.targetHeight ?? 300,
+    payload: { x: obj.payload.x, y: obj.payload.y, mass: obj.payload.mass, delay: obj.payload.delay|0, radius: obj.payload.radius|0, holdFrames: obj.payload.holdFrames|0, cableLen: obj.payload.cableLen || 90 },
+    pass: { maxBrokenRatio: obj.pass.maxBrokenRatio, payloadGround: obj.pass.payloadGround, maxSink: obj.pass.maxSink ?? 9999 }
+  };
+}
+
+let customLevel = null;
+let currentLevelIndex = 0;
+let currentLevel = null;
+let stock = {};
+let stock0 = {};
+let lastScore = null;
+let levelState = 'building';
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0, groundY = 0, dpr = 1;
+
+let mode = 'build';
+let currentMat = 'paper';
+let currentTool = 'build';
+let earthquake = false;
+
+let nodes = [];
+let beams = [];
+let buckets = [];
+let nextId = 0;
+
+let mouse = { x:0, y:0, down:false };
+let dragStart = null;
+let previewEnd = null;
+let impulses = [];
+
+let payload = null;
+let testFrames = 0;
+
+let history = [];
+let historyIndex = -1;
+
+/* 塔类侧向失稳相关 */
+let sideScore = 1, gust = 0, gustDir = 0, gustPrimed = false;
+let beamErr = '';          // addBeam 失败原因：'span' 超长 | 'stock' 库存不足 | 'dup' 重复
+let payloadStall = 0;      // 棉花糖停止移动的帧数（用于高度判定）
+
+/* ===================== 加载配置 ===================== */
+async function loadConfig(){
+  try {
+    const res = await fetch('materials.json');
+    CONFIG = await res.json();
+  } catch(e){
+    CONFIG = defaultConfig();
+    setTip('未找到 materials.json，已使用默认配置。');
+  }
+  processConfig();
+}
+
+function processConfig(){
+  MATERIALS = {};
+  for (const [key, m] of Object.entries(CONFIG.materials)){
+    MATERIALS[key] = { ...m, key };
+  }
+  CFG.GRAVITY = CONFIG.physics.GRAVITY.value;
+  CFG.DAMPING = CONFIG.physics.DAMPING.value;
+  CFG.ITER = CONFIG.physics.ITER.value;
+  if (CONFIG.physics.LATERAL) CFG.LATERAL = CONFIG.physics.LATERAL.value;
+  if (CONFIG.physics.MAX_SPAN) CFG.MAX_SPAN = CONFIG.physics.MAX_SPAN.value;
+  for (const k of ['MASS_DENSITY_K','MASS_NODE_BASE','MASS_PAYLOAD_K','BUOY_K','LOAD_PRESS']){
+    if (CONFIG.physics[k] && typeof CONFIG.physics[k].value === 'number') CFG[k] = CONFIG.physics[k].value;
+  }
+  LEVELS = (CONFIG.levels || []).map(makeLevel);
+  if (!LEVELS.length) LEVELS = [makeLevel(defaultConfig().levels[0])];
+  currentMat = Object.keys(MATERIALS)[0];
+  // 难度分档：优先读取 localStorage，其次读配置默认，兜底 standard
+  try {
+    const def = (CONFIG.difficulty && CONFIG.difficulty.default) || 'standard';
+    const saved = localStorage.getItem('sg_difficulty');
+    difficultyKey = saved || def || 'standard';
+  } catch (e){ difficultyKey = (CONFIG.difficulty && CONFIG.difficulty.default) || 'standard'; }
+  renderMaterialButtons();
+  populateLevelSelect();
+  renderTeacherMats();
+}
+
+function difficultyCfg(){
+  const D = Object.assign({
+    default: 'standard',
+    tiers: {
+      easy: { name: '入门', payloadMul: 0.75, stockMul: 1.25 },
+      standard: { name: '标准', payloadMul: 1.0, stockMul: 1.0 },
+      hard: { name: '挑战', payloadMul: 1.25, stockMul: 0.85 }
+    }
+  }, CONFIG.difficulty || {});
+  if (!D.tiers) D.tiers = {};
+  if (!D.tiers.standard) D.tiers.standard = { name: '标准', payloadMul: 1.0, stockMul: 1.0 };
+  return D;
+}
+
+function applyDifficultyToLevel(lv){
+  if (!lv || lv.type === 'sandbox') return;
+  const D = difficultyCfg();
+  const tier = (D.tiers && D.tiers[difficultyKey]) || (D.tiers && D.tiers[D.default]) || D.tiers.standard;
+  if (!tier) return;
+  const pm = typeof tier.payloadMul === 'number' ? tier.payloadMul : 1;
+  const sm = typeof tier.stockMul === 'number' ? tier.stockMul : 1;
+  if (lv.payload && typeof lv.payload.mass === 'number'){
+    lv.payload.mass = Math.max(0, lv.payload.mass * pm);
+  }
+  if (!lv.free && lv.stock){
+    for (const k of Object.keys(lv.stock)){
+      const v = lv.stock[k] || 0;
+      lv.stock[k] = Math.max(0, Math.round(v * sm));
+    }
+  }
+}
+
+/* ===================== 工具函数 ===================== */
+function dist(ax, ay, bx, by){ return Math.hypot(ax-bx, ay-by); }
+/* 三维长度：二维节点没有 z 时为 0，行为与 dist 完全一致，可安全用于所有关卡 */
+function d3(a, b){ const dz = (b.z||0) - (a.z||0); return Math.hypot(b.x-a.x, b.y-a.y, dz); }
+function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+function addNode(x, y, pinned=false, extra={}){
+  const n = { id: nextId++, x, y, z: extra.z || 0, px:x, py:y, bx:x, by:y, bz: extra.z || 0, pinned, mass: extra.mass || 1, ...extra };
+  nodes.push(n);
+  return n;
+}
+
+function addBeam(a, b, mat, free=false){
+  if (a === b) return false;
+  if (MATERIALS[mat].kind === 'joint'){ beamErr = 'joint'; return false; }
+  if (beams.some(m => (m.a===a && m.b===b) || (m.a===b && m.b===a))){ beamErr = 'dup'; return false; }
+  // 材料长度有限：非绳索的单根构件跨度过长时拒绝（模拟真实中一张纸/一根意面拉不过大河）
+  if (!free && !MATERIALS[mat].cable){
+    const len = d3(a, b);
+    const lim = (typeof MATERIALS[mat].maxSpan === 'number' && MATERIALS[mat].maxSpan > 0) ? MATERIALS[mat].maxSpan : CFG.MAX_SPAN;
+    if (len > lim){
+      beamErr = 'span';
+      setTip('这一根太长（约 ' + Math.round(len) + 'px）——材料长度有限，请先放下中间节点，再分段连接，必要时加支撑/桥墩。');
+      return false;
+    }
+  }
+  if (!free && !currentLevel.free && stock[mat] <= 0){ beamErr = 'stock'; return false; }
+  beamErr = '';
+  if (!free && !currentLevel.free) stock[mat]--;
+  beams.push({ a, b, rest: d3(a,b), broken:false, mat, cable: MATERIALS[mat].cable });
+  if (!free && !currentLevel.free) refreshMaterialBar();
+  return true;
+}
+
+function deleteBeam(bm){
+  const idx = beams.indexOf(bm);
+  if (idx >= 0){ stock[bm.mat]++; beams.splice(idx, 1); refreshMaterialBar(); }
+}
+
+function deleteNode(n){
+  if (n.bucket) return; // 不能删除浮桶
+  const attached = beams.filter(bm => bm.a===n || bm.b===n);
+  attached.forEach(deleteBeam);
+  const idx = nodes.indexOf(n);
+  if (idx >= 0) nodes.splice(idx, 1);
+}
+
+function findNodeNear(x, y, exclude=null){
+  let best = null, bd = CFG.NODE_HIT;
+  for (const n of nodes){
+    if (n === exclude) continue;
+    const d = dist(x, y, n.x, n.y);
+    if (d < bd){ bd = d; best = n; }
+  }
+  return best;
+}
+
+function pointToSegment(px, py, ax, ay, bx, by){
+  const dx = bx-ax, dy = by-ay, len2 = dx*dx + dy*dy;
+  if (len2 === 0) return { t:0, x:ax, y:ay };
+  const t = Math.max(0, Math.min(1, ((px-ax)*dx + (py-ay)*dy) / len2));
+  return { t, x: ax + t*dx, y: ay + t*dy };
+}
+
+function findBeamNear(x, y){
+  let best = null, bd = CFG.BEAM_HIT;
+  for (const bm of beams){
+    if (bm.broken) continue;
+    const p = pointToSegment(x, y, bm.a.x, bm.a.y, bm.b.x, bm.b.y);
+    const d = dist(x, y, p.x, p.y);
+    if (d < bd){ bd = d; best = bm; }
+  }
+  return best;
+}
+
+/* ===================== 节点胶合（joint 材料：胶带 / 粘胶 / 热熔胶） =====================
+   真实课堂里胶带/热熔胶是把「交汇的构件」缠紧固定——点节点即可生效，不是画一条梁。
+   胶合后该节点从「铰接（可自由转动，两根杆搭一起会倒/散）」变为「刚接（抗弯）」：
+   PBD 物理里对胶合节点施加 angle 约束，锁住各构件在节点处的相对夹角。 */
+function isJointMat(k){ return MATERIALS[k] && MATERIALS[k].kind === 'joint'; }
+
+function pickBeamMat(){
+  // 模板/自动生成需要梁材料时，自动挑一种当前有库存的非 joint 材料
+  const keys = Object.keys(MATERIALS);
+  for (const k of keys){ if (MATERIALS[k].kind === 'joint') continue; if (currentLevel && (currentLevel.free || stock[k] > 0)) return k; }
+  return keys.find(k => MATERIALS[k].kind !== 'joint') || null;
+}
+
+function glueDegree(n){
+  return beams.filter(b => !b.broken && (b.a === n || b.b === n)).length;
+}
+
+function toggleGlue(n){
+  const m = MATERIALS[currentMat];
+  if (!m || m.kind !== 'joint') return false;
+  if (!n || n.bucket || n.pinned){ setTip('锚点/浮桶不需要上胶。'); return false; }
+  if (!n.glued && glueDegree(n) < 2){
+    setTip('这个节点只有 ' + glueDegree(n) + ' 根构件汇入——胶是把「两根以上构件交汇」的地方粘固。先让至少两根杆在这里相接，再点胶。');
+    return false;
+  }
+  if (n.glued){
+    if (n.glued === currentMat){
+      delete n.glued;
+      if (!currentLevel.free) stock[currentMat]++;
+      setTip('已解除该节点的' + m.name + '（返还 1 卷）。');
+    } else {
+      if (!currentLevel.free) stock[n.glued]++;
+      if (!currentLevel.free && stock[currentMat] <= 0){ stock[n.glued]--; setTip(m.name + '库存不足！'); return false; }
+      n.glued = currentMat;
+      if (!currentLevel.free) stock[currentMat]--;
+      setTip('改用' + m.name + '重新胶合（原胶已返还）。');
+    }
+  } else {
+    if (!currentLevel.free && stock[currentMat] <= 0){ setTip(m.name + '库存不足！'); return false; }
+    n.glued = currentMat;
+    if (!currentLevel.free) stock[currentMat]--;
+    setTip('已用' + m.name + '胶合该节点——交汇构件现在抗弯，测试时不会转动散架。再点一次可解除。');
+  }
+  pushHistory();
+  refreshMaterialBar();
+  return true;
+}
+
+function beamStrain(bm){
+  const d = d3(bm.a, bm.b);
+  return (d - bm.rest) / bm.rest;
+}
+
+function getAnchors(){ return nodes.filter(n => n.pinned).sort((a,b)=>a.x-b.x); }
+
+/* ===================== 历史记录 ===================== */
+function pushHistory(){
+  history = history.slice(0, historyIndex+1);
+  const snap = {
+    nodes: nodes.map(n => ({ x:n.x, y:n.y, z:n.z || 0, pinned:n.pinned, glued:n.glued })),
+    beams: beams.map(b => ({ a:nodes.indexOf(b.a), b:nodes.indexOf(b.b), mat:b.mat })),
+    buckets: buckets.map(b => ({ x:b.node.x, y:b.node.y })),
+    stock: clone(stock)
+  };
+  history.push(snap);
+  if (history.length > CFG.HISTORY_MAX) { history.shift(); }
+  else { historyIndex++; }
+  updateUndoUI();
+}
+
+function restoreSnapshot(snap){
+  nodes = []; beams = []; nextId = 0;
+  stock = clone(snap.stock);
+  for (const no of snap.nodes) addNode(no.x, no.y, no.pinned, { z: no.z || 0, glued: no.glued });
+  for (const bo of snap.beams){
+    if (bo.a>=0 && bo.b>=0 && bo.a<nodes.length && bo.b<nodes.length) addBeam(nodes[bo.a], nodes[bo.b], bo.mat, true);
+  }
+  // 重新生成浮桶，再恢复位置
+  spawnBuckets();
+  for (let i = 0; i < snap.buckets?.length && i < buckets.length; i++){
+    buckets[i].node.x = snap.buckets[i].x; buckets[i].node.y = snap.buckets[i].y;
+    buckets[i].node.px = snap.buckets[i].x; buckets[i].node.py = snap.buckets[i].y;
+    buckets[i].node.bx = snap.buckets[i].x; buckets[i].node.by = snap.buckets[i].y;
+  }
+  if (t3Active()){
+    t3SnapshotBuild();
+  }
+  levelState = 'building'; payload = null;
+  gust = 0; sideScore = 1; payloadStall = 0;
+  refreshMaterialBar();
+  updateUndoUI();
+}
+
+function undo(){ if (historyIndex > 0){ historyIndex--; restoreSnapshot(history[historyIndex]); logEvent('undo'); } }
+function redo(){ if (historyIndex < history.length-1){ historyIndex++; restoreSnapshot(history[historyIndex]); } }
+function updateUndoUI(){
+  document.getElementById('btnUndo').disabled = historyIndex <= 0;
+  document.getElementById('btnRedo').disabled = historyIndex >= history.length-1;
+}
+
+/* ===================== 物理 ===================== */
+/* 胶合节点的角度约束（PBD bending）：保持各汇交构件在节点处的相对夹角。
+   参考角在每次进入测试时按当前建造姿态快照，因此建造阶段随意调整都安全。 */
+function satisfyGluedAngle(O, A, B, cos0, k){
+  const ax=A.x-O.x, ay=A.y-O.y, bx=B.x-O.x, by=B.y-O.y;
+  const la=Math.hypot(ax,ay), lb=Math.hypot(bx,by);
+  if (la<1e-3 || lb<1e-3) return;
+  const ux=ax/la, uy=ay/la, vx=bx/lb, vy=by/lb;
+  const d=ux*vx+uy*vy;
+  if (d > 0.99999 && cos0 > 0.99999) return; // 两杆共线同向且无偏差，无需处理
+  const C=d-cos0;
+  const gAx=(vx-d*ux)/la, gAy=(vy-d*uy)/la;
+  const gBx=(ux-d*vx)/lb, gBy=(uy-d*vy)/lb;
+  const gOx=-(gAx+gBx), gOy=-(gAy+gBy);
+  const wA=A.pinned?0:(A.inv||1), wB=B.pinned?0:(B.inv||1), wO=O.pinned?0:(O.inv||1);
+  const W=wA*(gAx*gAx+gAy*gAy)+wB*(gBx*gBx+gBy*gBy)+wO*(gOx*gOx+gOy*gOy);
+  if (W<1e-9) return;
+  const lm=-C/W*k;
+  if (wA){ A.x+=lm*wA*gAx; A.y+=lm*wA*gAy; }
+  if (wB){ B.x+=lm*wB*gBx; B.y+=lm*wB*gBy; }
+  if (wO){ O.x+=lm*wO*gOx; O.y+=lm*wO*gOy; }
+}
+
+/* 质量体系：节点质量 = 基础质量(连接件自重) + 各相连构件质量的一半；
+   构件质量 = 长度 × 材料线密度 × MASS_DENSITY_K；载荷质量 = payload.mass × MASS_PAYLOAD_K。
+   有了质量差异，约束求解与碰撞才能区分“轻重”——砝码压得动结构、结构推不动砝码。 */
+function computeMasses(){
+  for (const n of nodes){
+    n.mass = n.bucket ? (n.mass && n.mass > 1 ? n.mass : 8) : CFG.MASS_NODE_BASE;
+    n.inv = 0;
+  }
+  for (const bm of beams){
+    if (bm.broken) continue;
+    bm.mass = bm.rest * (MATERIALS[bm.mat].density || 0) * CFG.MASS_DENSITY_K;
+    bm.a.mass += bm.mass / 2;
+    bm.b.mass += bm.mass / 2;
+  }
+  for (const n of nodes) n.inv = n.pinned ? 0 : 1 / Math.max(0.05, n.mass);
+  if (payload) payload.inv = 1 / Math.max(0.05, (payload.mass || 1) * CFG.MASS_PAYLOAD_K);
+}
+
+function captureGluedRefs(){
+  for (const n of nodes){
+    delete n._cos0;
+    if (!n.glued) continue;
+    const inc = [];
+    for (const bm of beams){ if (bm.broken) continue; if (bm.a===n) inc.push(bm.b); else if (bm.b===n) inc.push(bm.a); }
+    if (inc.length < 2) continue;
+    const arr = [];
+    for (let i = 0; i < inc.length; i++){
+      const A = inc[i], B = inc[(i+1) % inc.length];
+      const ax=A.x-n.x, ay=A.y-n.y, bx=B.x-n.x, by=B.y-n.y;
+      const la=Math.hypot(ax,ay)||1e-4, lb=Math.hypot(bx,by)||1e-4;
+      arr.push((ax*bx+ay*by)/(la*lb));
+    }
+    n._cos0 = arr;
+  }
+}
+
+function physicsStep(){
+  for (const n of nodes){
+    if (n.pinned) continue;
+    const vx = (n.x - n.px) * CFG.DAMPING;
+    const vy = (n.y - n.py) * CFG.DAMPING;
+    n.px = n.x; n.py = n.y;
+    n.x += vx; n.y += vy + CFG.GRAVITY;
+    if (earthquake) n.x += (Math.random() - 0.5) * 1.6;
+  }
+  /* 浮桶节点本身就在 nodes 里，上面的循环已完成积分；此处若再积分一次会造成
+     重力/速度双重叠加（实测：浮力 0.5 < 双倍重力 0.64，浮桶被死死压在河床上永不浮起）。
+     水平回位与地面约束分别放在下面的迭代与 applyBuoyancy 中处理。 */
+
+  for (let it = 0; it < CFG.ITER; it++){
+    for (const bm of beams){
+      if (bm.broken) continue;
+      const a = bm.a, b = bm.b;
+      let dx = b.x - a.x, dy = b.y - a.y;
+      let d = Math.hypot(dx, dy) || 1e-4;
+      const diff = (d - bm.rest) / d;
+      if (bm.cable && d < bm.rest) continue;
+      // 按「质量倒数」加权分配修正量：轻的一端被拉动更多，重的一端几乎不动
+      const wa = a.pinned ? 0 : (a.inv || 1), wb = b.pinned ? 0 : (b.inv || 1);
+      const wsum = wa + wb;
+      if (wsum <= 0) continue;
+      const sc = diff * MATERIALS[bm.mat].stiff / wsum;
+      const ox = dx * sc, oy = dy * sc;
+      if (wa){ a.x += ox * wa; a.y += oy * wa; }
+      if (wb){ b.x -= ox * wb; b.y -= oy * wb; }
+    }
+    /* 胶合节点：锁住交汇构件相对夹角（刚接/抗弯）。断裂使入射数变化 → 放弃该节点角度约束（结构本已失效）。 */
+    for (const n of nodes){
+      if (!n.glued || !n._cos0) continue;
+      const inc = [];
+      for (const bm of beams){ if (bm.broken) continue; if (bm.a===n) inc.push(bm.b); else if (bm.b===n) inc.push(bm.a); }
+      if (inc.length !== n._cos0.length || inc.length < 2) continue;
+      const k = (MATERIALS[n.glued] && MATERIALS[n.glued].angleK) || 0.5;
+      for (let i = 0; i < inc.length; i++){
+        satisfyGluedAngle(n, inc[i], inc[(i+1) % inc.length], n._cos0[i], k);
+      }
+    }
+    // 载荷接触约束（迭代内求解，重物才真正“压”在结构上）
+    solvePayloadContacts();
+    for (const n of nodes){
+      if (n.y > groundY){ n.y = groundY; n.px = n.x + (n.px - n.x) * 0.6; }
+    }
+    for (const b of buckets){
+      const bottom = b.node.y + b.height/2;
+      if (bottom > groundY){ b.node.y = groundY - b.height/2; b.node.px = b.node.x + (b.node.px - b.node.x)*0.5; }
+    }
+  }
+
+  /* 载荷积分提前到约束迭代之前：砝码先受重力加速，再与结构一起进入约束求解。
+     关键在于——接触约束必须在下面的迭代循环「内部」求解，否则重物的重量无法沿构件链传递，
+     质量一有差异就会发散（实测：等质量 3/3 通过，只要出现质量差就 0/3 垮塌）。 */
+  if (payload){
+    payload.frame++;
+    if (payload.frame > currentLevel.payload.delay) payload.active = true;
+    // 悬臂关：像塔吊缓缓落钩一样，载荷质量从 0 逐渐 ramp 到目标值，避免突然下坠造成动态冲击
+    if (currentLevel.type === 'cantilever' && typeof payload.fullMass === 'number' && payload.mass < payload.fullMass){
+      payload.mass = Math.min(payload.fullMass, payload.mass + payload.fullMass / (payload.rampFrames || 60));
+      payload.inv = 1 / Math.max(0.05, payload.mass * CFG.MASS_PAYLOAD_K);
+    }
+    if (payload.active){
+      const vx = (payload.x - payload.px) * CFG.DAMPING;
+      const vy = (payload.y - payload.py) * CFG.DAMPING;
+      payload.px = payload.x; payload.py = payload.y;
+      payload.x += vx; payload.y += vy + CFG.GRAVITY;
+    }
+  }
+
+  applyBuoyancy();
+
+  checkBreakage();
+
+  if (payload){
+    testFrames++;
+    checkLevelState();
+  }
+
+  /* 塔类侧向失稳：模拟真实棉花糖塔需要“侧面”加固 —— 高塔在顶端重物下会受侧向晃动，
+     底座窄、没有 X 斜撑（三角形少）的塔侧向稳定度低，会摇晃直至倒塌。 */
+  if (currentLevel.type === 'tower' && payload && payload.active){
+    sideScore = computeLateralScore();
+    const weak = Math.max(0, 1 - sideScore);
+    // 关键：在判定成功前就至少经历一次“侧风”，否则无斜撑窄塔永远不会因为侧向失稳而被淘汰
+    if (!gustPrimed && weak > 0.05 && payload.frame > currentLevel.payload.delay + 18){
+      gust = Math.max(gust, 90 + 80 * weak);
+      gustDir = Math.random() < 0.5 ? -1 : 1;   // 选一个固定风向
+      gustPrimed = true;
+    }
+    if (gust > 0){
+      // 一阵“侧风”：同向连贯推力（真实剪切），强度随稳定度缺失放大。
+      // 无斜撑的塔像平行四边形机构，被同向推一下就剪塌；有交叉斜撑的塔被对角线拉住、只是微微侧倾后回正。
+      const amp = (0.3 + weak * 2.2) * CFG.LATERAL * 12;
+      for (const n of nodes){ if (!n.pinned) n.x += gustDir * amp; }
+      gust--;
+    } else if (weak > 0.05 && payload.frame > currentLevel.payload.delay + 120 && Math.random() < 0.012){
+      gust = 90 + 80 * weak; gustDir = Math.random() < 0.5 ? -1 : 1;
+    }
+  }
+
+  /* 关键：在「载荷碰撞推挤」之后再判断一次断裂。
+     若只在约束后判断，撞击产生的瞬时应变会被下一帧的约束修复掉，
+     导致撞击载荷永远压不断构件（实测出现应力 266% 却 0 断裂）。 */
+  checkBreakage();
+}
+
+function checkBreakage(){
+  for (const bm of beams){
+    if (bm.broken || bm.payloadCable) continue;
+    if (Math.abs(beamStrain(bm)) > MATERIALS[bm.mat].breakStrain) bm.broken = true;
+  }
+}
+
+function applyBuoyancy(){
+  if (currentLevel.type !== 'floating') return;
+  const waterY = groundY + currentLevel.waterY;
+  // 结构入水：只提供很小的浮力（纸/意面入水后仍会继续下沉）
+  for (const n of nodes){
+    if (n.bucket) continue;
+    if (n.y > waterY){
+      const depth = Math.min(n.y - waterY, 60);
+      const m = Math.max(0.05, n.mass || 1);
+      const buoy = depth * CFG.BUOY_K * 0.3 / m;
+      n.y -= buoy;
+      const vx = n.x - n.px, vy = n.y - n.py;
+      n.px = n.x - vx * 0.92;
+      n.py = n.y - vy * 0.85;
+    }
+  }
+  /* 浮桶：浮力 = 吃水深度 × BUOY_K ÷ 总质量（加速度形式）。
+     必须除以质量——否则稳态条件恒为「浮力 = 重力加速度」，浮沉与载重无关。 */
+  for (const b of buckets){
+    const n = b.node;
+    const m = Math.max(0.05, n.mass || 8);
+    const submerge = Math.max(0, (n.y + b.height/2) - waterY);
+    const buoy = Math.min(submerge * CFG.BUOY_K / m, 1.2);
+    n.y -= buoy;
+    const vx = n.x - n.px, vy = n.y - n.py;
+    n.px = n.x - vx * 0.90;
+    n.py = n.y - vy * 0.80;
+    n.x += (b.homeX - n.x) * 0.005;
+  }
+}
+
+/* 载荷 ↔ 结构 接触约束（标准 PBD，在约束迭代内部调用）。
+   重物之所以能“压垮”结构，靠的是质量倒数加权：砝码 inv 小（重）→ 几乎不被推开；
+   结构节点 inv 大（轻）→ 被压下去。穿透量按质量比在两者间分配，重量就这样沿构件链往下传。 */
+function solvePayloadContacts(){
+  if (!payload || !payload.active) return;
+  const wP = payload.inv || 1;
+  const k = Math.max(0.05, Math.min(1, CFG.LOAD_PRESS));
+
+  /* 悬臂关：载荷是「悬挂」在钢索下的，不应该再被任何结构梁托住/卡住；
+     力只通过钢索传到挂钩点，这样才真正像塔吊。 */
+  if (currentLevel.type === 'cantilever') return;
+
+  for (const bm of beams){
+    if (bm.broken) continue;
+    const seg = pointToSegment(payload.x, payload.y, bm.a.x, bm.a.y, bm.b.x, bm.b.y);
+    const d = dist(payload.x, payload.y, seg.x, seg.y);
+    const threshold = payload.radius + MATERIALS[bm.mat].width/2 + 2;
+    if (d >= threshold || d <= 0.01) continue;
+    const nx = (payload.x - seg.x)/d, ny = (payload.y - seg.y)/d;
+    const err = (threshold - d) * k;
+    // 落点按重心坐标分给两端；结构侧等效柔度 = Σ w_i · t_i²
+    const ta = 1 - seg.t, tb = seg.t;
+    const wA = bm.a.pinned ? 0 : (bm.a.inv || 1);
+    const wB = bm.b.pinned ? 0 : (bm.b.inv || 1);
+    const wS = wA * ta * ta + wB * tb * tb;
+    const sum = wP + wS;
+    if (sum <= 0) continue;
+    payload.x += nx * err * (wP / sum);
+    payload.y += ny * err * (wP / sum);
+    if (wA){ bm.a.x -= nx * err * (wA * ta / sum); bm.a.y -= ny * err * (wA * ta / sum); }
+    if (wB){ bm.b.x -= nx * err * (wB * tb / sum); bm.b.y -= ny * err * (wB * tb / sum); }
+  }
+  for (const n of nodes){
+    if (n === payload.hook) continue; // 挂钩点只通过钢索传力，避免载荷「卡」在节点上
+    const d = dist(payload.x, payload.y, n.x, n.y);
+    const threshold = payload.radius + 6;
+    if (d >= threshold || d <= 0.01) continue;
+    const nx = (payload.x - n.x)/d, ny = (payload.y - n.y)/d;
+    const err = (threshold - d) * k;
+    const wS = n.pinned ? 0 : (n.inv || 1);
+    const sum = wP + wS;
+    if (sum <= 0) continue;
+    payload.x += nx * err * (wP / sum);
+    payload.y += ny * err * (wP / sum);
+    if (!n.pinned){ n.x -= nx * err * (wS / sum); n.y -= ny * err * (wS / sum); }
+  }
+  if (payload.y + payload.radius > groundY){
+    payload.y = groundY - payload.radius;
+    payload.px = payload.x + (payload.px - payload.x) * 0.7;
+  }
+}
+
+function applyImpulse(cx, cy, radius, force){
+  impulses.push({ x:cx, y:cy, r:6, max:radius*3.2, life:1 });
+  for (const n of nodes){
+    if (n.pinned) continue;
+    const d = dist(n.x, n.y, cx, cy);
+    if (d < radius){
+      const f = (1 - d/radius) * force;
+      const ang = Math.atan2(n.y - cy, n.x - cx);
+      n.x += Math.cos(ang) * f;
+      n.y += Math.sin(ang) * f + f * 0.3;
+    }
+  }
+}
+
+/* ===================== 关卡 ===================== */
+function spawnBuckets(){
+  buckets = [];
+  const list = currentLevel.buckets || [];
+  const count = list.length;
+  if (!count) return;
+  // 当视口过宽时（W >= 1040px），避免桶间距超过材料最大跨度（stick 260px）
+  const maxStep = 210;
+  const rawStep = count > 1 ? ((list[count - 1].x - list[0].x) / (count - 1)) * W : 0;
+  const step = Math.min(maxStep, rawStep);
+  const centerX = W * 0.5;
+  const startX = centerX - ((count - 1) / 2) * step;
+  for (let i = 0; i < count; i++){
+    const b = list[i];
+    const posX = count > 1 ? startX + i * step : b.x * W;
+    const bw = 50, bh = 80;
+    const n = addNode(posX, groundY + b.y - bh/2, false, { mass: 8, bucket: true });
+    n.homeX = posX;
+    buckets.push({ node: n, width: bw, height: bh, homeX: posX });
+  }
+}
+
+function loadLevel(idx){
+  if (idx === -2){
+    currentLevel = {
+      name: '自由建造实验室', type: 'sandbox', free: true,
+      desc: '无限材料 · 自由搭建任意结构。点击「测试」观察重力、应力与断裂，可加地震或点击冲击。',
+      stock: {}, anchors: [{x:0.35,y:-10},{x:0.65,y:-10}], buckets: [], waterY: -10,
+      targetHeight: 0,
+      payload: { x:0.5, y:-999, mass:0, delay:999999, radius:10, holdFrames:999999 },
+      pass: { maxBrokenRatio: 1, payloadGround:false, maxSink: 9999 }
+    };
+  }
+  else if (idx === -1 && customLevel) currentLevel = clone(customLevel);
+  else currentLevel = clone(LEVELS[idx]);
+  applyDifficultyToLevel(currentLevel);
+  currentLevelIndex = idx;
+  stock = currentLevel.free ? {} : clone(currentLevel.stock);
+  stock0 = currentLevel.free ? {} : clone(currentLevel.stock); // 记录初始库存，供「用料经济」评分
+  nodes = []; beams = []; nextId = 0; payload = null;
+  if (t3Active()) t3OnLoadLevel();
+  gust = 0; sideScore = 1; payloadStall = 0; gustPrimed = false;
+  for (const a of currentLevel.anchors) addNode(a.x * W, groundY + a.y, true);
+  spawnBuckets();
+  levelState = 'building';
+  mode = 'build';
+  setModeUI('build');
+  history = []; historyIndex = -1;
+  pushHistory();
+  renderMaterialButtons();
+  refreshMaterialBar();
+  updateTemplateButtons();
+  updateLevelUI();
+  setTip(currentLevel.desc + ' 从左侧「模板」可一键开局，也可直接拖画搭建。');
+}
+
+function structureTopNode(){
+  // 取当前最高（y 最小）的活动节点带：若顶部是平台/几条等高支杆，返回它们的几何中心，
+  // 棉花糖从中心轻轻落下才能稳稳落在“杯口/支架”里——只对着单根杆顶放会滚落。
+  let minY = Infinity;
+  for (const n of nodes){
+    if (n.pinned || n.bucket) continue;
+    if (n.y < minY) minY = n.y;
+  }
+  if (!isFinite(minY)) return null;
+  let sx = 0, cnt = 0;
+  for (const n of nodes){
+    if (n.pinned || n.bucket) continue;
+    if (n.y <= minY + 14){ sx += n.x; cnt++; }
+  }
+  return { x: sx / cnt, y: minY };
+}
+
+/* 悬臂关「塔吊挂钩」：找学生搭出的最右端节点作为挂钩点，载荷从这里用钢索悬挂。
+   找不到合适的末端节点时返回 null，测试会被拒绝。 */
+function findCantileverHook(targetX){
+  // 挂钩点：有显式 hook=true 标记的节点优先，否则取最接近目标 x 的非固定活动节点
+  const hooks = nodes.filter(n => n.hook);
+  if (hooks.length){
+    hooks.sort((p, q) => Math.abs(p.x - targetX) - Math.abs(q.x - targetX));
+    return hooks[0];
+  }
+  const opts = nodes.filter(n => !n.pinned && !n.bucket && n.x >= targetX - 60);
+  if (!opts.length) return null;
+  opts.sort((p, q) => Math.abs(p.x - targetX) - Math.abs(q.x - targetX));
+  const best = opts[0];
+  if (best.x < targetX - 140) return null;
+  return best;
+}
+
+function addPayloadCable(a, b){
+  // 用钢索做挂钩缆，并标记为测试装置缆——不应因动态冲击被拉断
+  beams.push({ a, b, rest: d3(a,b), broken: false, mat: 'cable', cable: true, payloadCable: true });
+}
+
+function enterTest(){
+  if (levelState !== 'building' && levelState !== 'pass' && levelState !== 'fail') return false;
+  /* 棉花糖高塔：不是落砝码，而是「松手」——判定就是它能不能自己站住 */
+  if (t3Active()){
+    const ok = t3BeginTest();
+    if (ok){ mode = 'test'; levelState = 'testing'; hideResult(); setModeUI('test'); }
+    return ok;
+  }
+  const pl = currentLevel.payload;
+  // 棉花糖挑战：没有砝码——把唯一一颗棉花糖放到结构当前最高点上方，轻轻落下（比看起来重）
+  if (currentLevel.type === 'tower'){
+    const top = structureTopNode();
+    if (!top){
+      setTip('先在桌面上用意面搭出塔身，再点「测试」把棉花糖放到塔顶检验。底座要宽、加交叉斜撑才立得稳。');
+      return false;
+    }
+    payload = {
+      x: top.x, y: top.y - 34, px: top.x, py: top.y - 34,
+      radius: pl.radius, mass: pl.mass, frame: 0, active: true, crown: true
+    };
+  }
+  else if (currentLevel.type === 'cantilever' && pl){
+    /* 悬臂关：像塔吊一样，载荷用钢索挂在悬臂最右端（挂钩点），不是从半空落下。
+       pl.y === -999 表示「从挂钩点上方悬挂」；pl.x 是挂钩的目标水平位置。 */
+    const targetX = pl.x * W;
+    const hook = findCantileverHook(targetX);
+    if (!hook){
+      setTip('悬臂还没有伸到挂钩位置（约 x=' + Math.round(targetX) + '），请先向右搭出足够长的悬臂。');
+      return false;
+    }
+    const cableLen = pl.cableLen || 12;
+    payload = {
+      x: hook.x, y: hook.y - cableLen, px: hook.x, py: hook.y - cableLen,
+      radius: pl.radius, mass: 0, fullMass: pl.mass, rampFrames: 60,
+      frame: 0, active: true, hook: hook
+    };
+    addPayloadCable(hook, payload);
+  }
+  else if (currentLevel.type !== 'sandbox' && pl){
+    // 砝码落点坐标与锚点一致用「相对地面」表示：pl.y 是相对 groundY 的偏移（如 -470 = 落到桥面之上约 260px 处），
+    // 不要直接当绝对坐标用，否则会从画布外自由落体、速度大到穿透薄桥面。
+    const dropY = groundY + pl.y;
+    payload = {
+      x: pl.x * W, y: dropY, px: pl.x * W, py: dropY,
+      radius: pl.radius, mass: pl.mass, frame: 0, active: false
+    };
+  }
+  else payload = null;
+  payloadStall = 0;
+  pushHistory();
+  mode = 'test'; levelState = 'testing'; testFrames = 0;
+  for (const n of nodes){ n.bx = n.x; n.by = n.y; n.px = n.x + (Math.random()-0.5)*0.4; n.py = n.y; }
+  computeMasses();
+  captureGluedRefs();
+  gustPrimed = false;
+  for (const b of buckets){ b.node.bx = b.node.x; b.node.by = b.node.y; }
+  for (const bm of beams) bm.broken = false;
+  document.getElementById('legend').style.display = 'block';
+  document.getElementById('btnQuake').disabled = false;
+  const st = structureStats();
+  logEvent('test', { form: st.form, tris: st.tris, beams: st.beams, tension: st.tension, compression: st.compression, triRatio: st.triRatio, span: st.span, height: st.height });
+  setTip(currentLevel.type === 'sandbox'
+    ? '自由测试：结构受重力下垂，点击画面可施加冲击，可加地震。回建造即复位。'
+    : currentLevel.type === 'tower'
+      ? '棉花糖已经轻轻放到塔顶——看它能不能站住。棉花糖比看起来重，越高越窄的塔越容易失稳。'
+      : '测试模式：点击画面可施加冲击。');
+  hideResult();
+  return true;
+}
+
+function enterBuild(){
+  mode = 'build'; earthquake = false;
+  if (t3Active()) t3ExitTest();   // 三维塔：收走棉花糖并把结构恢复到松手前的姿态
+  document.getElementById('btnQuake').classList.remove('active');
+  document.getElementById('btnQuake').disabled = true;
+  for (const n of nodes){ n.x = n.bx; n.y = n.by; n.px = n.bx; n.py = n.by; }
+  for (const b of buckets){ b.node.x = b.node.bx; b.node.y = b.node.by; b.node.px = b.node.bx; b.node.py = b.node.by; }
+  for (const bm of beams) bm.broken = false;
+  beams = beams.filter(bm => !bm.payloadCable);
+  payload = null; testFrames = 0; levelState = 'building';
+  gust = 0; sideScore = 1; payloadStall = 0; gustPrimed = false;
+  document.getElementById('legend').style.display = 'none';
+  setTip(currentLevel.desc + ' 从左侧「模板」可一键开局，也可直接拖画搭建。');
+  hideResult();
+}
+
+function checkLevelState(){
+  if (t3Active()) return;   // 三维塔的成败由 t3Judge 判定
+  if (!payload || !payload.active) return;
+  const elapsed = payload.frame - currentLevel.payload.delay;
+  if (elapsed < currentLevel.payload.holdFrames) return;
+  const structBeams = beams.filter(b => !b.payloadCable);
+  const total = Math.max(1, structBeams.length);
+  const brokenRatio = structBeams.filter(b => b.broken).length / total;
+  const payloadGround = payload.y + payload.radius >= groundY - 1;
+  const maxAllowed = currentLevel.pass.maxBrokenRatio;
+
+  if (currentLevel.type === 'tower'){
+    // 棉花糖挑战：没有砝码下落。判定 = 棉花糖完整架在塔顶不落地、塔不垮，且棉花糖顶达到目标红线
+    const target = groundY - currentLevel.targetHeight;
+    if (payloadGround || brokenRatio > maxAllowed){
+      levelState = 'fail';
+      showResult(payloadGround ? '棉花糖落地了——塔没能撑住它' : '结构垮塌：构件断裂过多', false);
+      return;
+    }
+    const spd = Math.hypot(payload.x - payload.px, payload.y - payload.py);
+    payloadStall = spd < 0.55 ? payloadStall + 1 : 0;
+    if (payload.y <= target && payloadStall > 25){
+      levelState = 'pass'; showResult('挑战成功：棉花糖稳稳架在了目标高度以上！', true);
+    } else if (payloadStall > 130){
+      levelState = 'fail';
+      showResult('塔立住了，但棉花糖还没到红线高度——继续向上加高吧。', false);
+    }
+    return;
+  }
+
+  if (currentLevel.type === 'floating'){
+    const waterY = groundY + currentLevel.waterY;
+    // 桥面（非浮桶、且仍连着构件的活动节点）没入水中的最大深度
+    const deck = nodes.filter(n => !n.bucket && !n.pinned && beams.some(b => !b.broken && (b.a === n || b.b === n)));
+    const deckSink = deck.length ? Math.max(...deck.map(n => n.y - waterY)) : 0;
+    const payloadSink = Math.max(0, (payload.y + payload.radius) - waterY);
+    const sink = Math.max(deckSink, payloadSink);
+    // 浮桶坐到河床 = 浮力已经用尽
+    const bucketGround = buckets.some(b => b.node.y + b.height/2 >= groundY - 2);
+    if (brokenRatio > maxAllowed){
+      levelState = 'fail'; showResult('构件断裂过多，浮桥散架', false);
+    } else if (bucketGround){
+      levelState = 'fail'; showResult('浮桶沉到了河床——总重量超过浮力', false);
+    } else if (payloadGround){
+      levelState = 'fail'; showResult('砝码落水触底', false);
+    } else if (sink > currentLevel.pass.maxSink){
+      levelState = 'fail'; showResult('桥面没入水中——浮桶下沉过多', false);
+    } else {
+      levelState = 'pass'; showResult('挑战成功', true);
+    }
+    return;
+  }
+
+  // 结构姿态检查：任何活跃节点塌到地面、或砝码下沉过低，都判失败
+  const anyNodeGround = nodes.some(n => !n.pinned && !n.bucket && beams.some(b => !b.broken && (b.a === n || b.b === n)) && n.y >= groundY - 15);
+  const payloadTooLow = payload && payload.y >= groundY - 45;
+
+  if (brokenRatio > maxAllowed){
+    levelState = 'fail'; showResult('构件断裂过多，结构失稳', false);
+  } else if (payloadGround){
+    levelState = 'fail'; showResult('砝码落地', false);
+  } else if (anyNodeGround){
+    levelState = 'fail'; showResult('结构已倒塌触地', false);
+  } else if (payloadTooLow){
+    levelState = 'fail'; showResult('砝码下沉过低——结构刚度不足', false);
+  } else {
+    levelState = 'pass'; showResult('挑战成功', true);
+  }
+}
+
+function showResult(text, ok, extra){
+  const el = document.getElementById('result');
+  el.className = ok ? 'pass' : 'fail'; el.style.display = 'block';
+  let maxStress = 0;
+  for (const b of beams){ if (!b.broken){ const s = Math.abs(beamStrain(b)) / MATERIALS[b.mat].breakStrain; if (s > maxStress) maxStress = s; } }
+  // 结算：定格评分并给出分项明细（分数在测试过程中一直跳动，此处锁定最终值）
+  const S = computeLiveScore();
+  lastScore = S;
+  el.innerHTML = '<div class="rsText">' + text + '</div>' + scoreBreakdownHtml(S);
+  logEvent('result', Object.assign({
+    ok, brokenRatio: beams.length ? beams.filter(b => b.broken).length / beams.length : 0,
+    maxStress, score: S.total, parts: S.parts
+  }, extra || {}));
+  maybeSubmitProject();
+}
+function hideResult(){ document.getElementById('result').style.display = 'none'; }
+
+/* ===================== 模板 ===================== */
+function ensureAnchors(){
+  const anchors = getAnchors();
+  if (anchors.length < 1){ loadLevel(currentLevelIndex); return getAnchors(); }
+  return anchors;
+}
+
+function templateDeck(){
+  pushHistory();
+  
+  resetField();
+  const m = pickBeamMat();
+  if (!m){ setTip('当前没有可用的结构材料。'); return; }
+  const anchors = ensureAnchors();
+  if (currentLevel.type === 'tower'){ templateTower(); return; }
+  if (anchors.length < 2) return;
+  const [L, R] = anchors;
+  // 桥面 = 紧贴两岸锚点高度铺一条平路（桥面就是下弦/甲板），两端直接坐在锚点上不会下塌；
+  // 学生再在其上（或下）加桁架/斜撑把载荷分摊到两岸。
+  const segments = 4; const dx = (R.x - L.x) / segments; let prev = L;
+  for (let i = 1; i < segments; i++){
+    const n = addNode(L.x + dx*i, L.y);
+    addBeam(prev, n, m); prev = n;
+  }
+  addBeam(prev, R, m);
+}
+
+function templateTruss(){
+  pushHistory();
+  
+  resetField();
+  const m = pickBeamMat();
+  if (!m){ setTip('当前没有可用的结构材料。'); return; }
+  const anchors = ensureAnchors();
+  if (anchors.length < 2) return;
+  const [L, R] = anchors;
+  const span = R.x - L.x;
+  const segments = 4;
+  const dx = span / segments;
+  const deckY = L.y;                          // 桥面（下弦）落在两岸锚点高度
+  const depth = Math.min(110, span * 0.22);   // 桁架高度（上弦抬高）
+  const topY = deckY - depth;
+  // 桥面节点（含两岸锚点）；砝码 x 落在中点 D[segments/2]
+  const D = [];
+  for (let i = 0; i <= segments; i++) D.push(i === 0 ? L : (i === segments ? R : addNode(L.x + dx*i, deckY, false)));
+  // 上弦节点：每两桥面节点之间一个（Warren 桁架的 apex）
+  const A = [];
+  for (let i = 0; i < segments; i++) A.push(addNode(L.x + dx*(i+0.5), topY, false));
+  for (let i = 0; i < segments; i++) addBeam(D[i], D[i+1], m);          // 下弦（桥面）
+  for (let i = 0; i < segments - 1; i++) addBeam(A[i], A[i+1], m);     // 上弦
+  for (let i = 0; i < segments; i++){ addBeam(A[i], D[i], m); addBeam(A[i], D[i+1], m); } // 斜撑（每节三角化）
+}
+
+function templateCable(){
+  pushHistory();
+  
+  resetField();
+  const m = pickBeamMat();
+  if (!m){ setTip('当前没有可用的结构材料。'); return; }
+  const anchors = ensureAnchors();
+  if (anchors.length < 2) return;
+  const [L, R] = anchors;
+  const segments = 6, dx = (R.x - L.x) / segments, deckY = L.y + 70;
+  const deckNodes = [];
+  for (let i = 0; i <= segments; i++) deckNodes.push(addNode(L.x + dx*i, deckY));
+  for (let i = 0; i < deckNodes.length-1; i++) addBeam(deckNodes[i], deckNodes[i+1], m);
+  let prevP = null;
+  for (let i = 0; i <= segments; i++){
+    const t = i / segments;
+    const sx = L.x + (R.x - L.x) * t;
+    const sy = L.y - Math.sin(t*Math.PI) * 90;
+    const p = addNode(sx, sy); p.pinned = (i === 0 || i === segments);
+    if (prevP) addBeam(prevP, p, 'cable');
+    if (i > 0 && i < segments) addBeam(p, deckNodes[i], 'cable');
+    prevP = p;
+  }
+}
+
+function templateTower(){
+  pushHistory();
+  
+  resetField();
+  const m = pickBeamMat();
+  if (!m){ setTip('当前没有可用的结构材料。'); return; }
+  const anchors = ensureAnchors();
+  const base = anchors[0];
+  // 平底座：底边两个节点与锚点同高（不再用倒 V 尖底——尖底塔会从单点翻转倒下）。
+  // 锚点(单铰)固定在底座中心，底座横梁 + 交叉斜撑让塔从“宽而平”的根部往上长。
+  const w = 60, h = 90;
+  // 两个底角与锚点一起固定（模拟把塔基用胶带粘在桌上）——这是「平而宽」的固定地基，塔从它往上长，不会绕单点翻转。
+  const bl = addNode(base.x - w/2, base.y, true);
+  const br = addNode(base.x + w/2, base.y, true);
+  const tl = addNode(base.x - w/2, base.y - h, false);
+  const tr = addNode(base.x + w/2, base.y - h, false);
+  addBeam(base, bl, m); addBeam(base, br, m);  // 锚点 → 平底座两端
+  addBeam(bl, br, m);                            // 底座横梁
+  addBeam(bl, tl, m); addBeam(br, tr, m);
+  addBeam(bl, tr, m); addBeam(br, tl, m);        // 交叉斜撑（三角化）
+  addBeam(tl, tr, m);
+}
+
+function templateCantilever(){
+  pushHistory();
+  
+  resetField();
+  const m = pickBeamMat();
+  if (!m){ setTip('当前没有可用的结构材料。'); return; }
+  const anchors = ensureAnchors();
+  if (!anchors.length) return;
+
+  /* 夹持端判定：同一竖直线上、一上一下两个锚点 = “夹在桌沿/墙”的固定端。
+     悬臂要抗弯矩，固定端必须有上下两个约束点（单铰点只能当钟摆转下去，现实中不可能悬挑）。 */
+  let A = anchors[0], bot = null;
+  if (anchors.length >= 2){
+    const s = [...anchors].sort((p, q) => p.y - q.y); // y 小在上
+    if (Math.abs(s[0].x - s[1].x) < 40 && s[1].y - s[0].y >= 40){ A = s[0]; bot = s[1]; }
+  }
+
+  if (!bot){
+    // 兜底（自由沙盒等无夹持锚的场合）：沿用旧版从单锚向下挑出的开放结构
+    const endX = Math.max(A.x + 120, Math.min(currentLevel.payload.x * W - 40, W - 60));
+    const seg = 3, dx = Math.max(42, (endX - A.x) / seg), dy = 44;
+    const tops = [A];
+    const bots = [addNode(A.x, A.y + dy)];
+    addBeam(A, bots[0], m);
+    for (let i = 1; i <= seg; i++){
+      const tx = A.x + dx * i;
+      const tt = addNode(tx, A.y);
+      const bb = addNode(tx, A.y + dy);
+      addBeam(tops[i-1], tt, m); addBeam(bots[i-1], bb, m);
+      addBeam(tops[i-1], bb, m); addBeam(bots[i-1], tt, m);
+      if (i < seg) addBeam(tt, bb, m);
+      tops.push(tt); bots.push(bb);
+    }
+    addBeam(tops[seg], bots[seg], m);
+    return;
+  }
+
+  // 夹持悬臂：上弦沿上锚高度、下弦沿下锚高度，向右挑出 N 节桁架并全部节点上胶。
+  // 像塔吊一样：在吊臂末端伸出一小段「吊钩柱」，再用钢索把砝码悬挂在柱底。
+  const targetX = currentLevel.payload.x * W;
+  const endX = Math.max(A.x + 120, Math.min(targetX + 8, W - 60));
+  const reach = endX - A.x;
+  const depth = bot.y - A.y;
+  const seg = Math.max(2, Math.min(4, Math.round(reach / Math.max(120, depth * 1.5))));
+  const dx = reach / seg;
+  let prevT = A, prevB = bot, endTop = null;
+  for (let i = 1; i <= seg; i++){
+    const tt = addNode(A.x + dx * i, A.y);
+    const bb = addNode(A.x + dx * i, bot.y);
+    addBeam(prevT, tt, m);   // 上弦（吊臂）
+    addBeam(prevB, bb, m);   // 下弦
+    addBeam(prevT, bb, m);   // 斜撑（交叉）
+    addBeam(prevB, tt, m);
+    if (i === seg){ addBeam(tt, bb, m); endTop = tt; } // 端部封口竖杆
+    prevT = tt; prevB = bb;
+  }
+  // 塔吊式吊钩柱：从上弦末端向下伸出，钢索从这里挂砝码
+  if (endTop){
+    const hook = addNode(endTop.x, endTop.y + 38, false, { hook: true });
+    addBeam(endTop, hook, m);
+  }
+}
+
+/* 模板按钮按关卡类型显隐（悬索需有钢索库存，自由模式全部可用） */
+const TPL_MAP = {
+  bridge: ['btnTempDeck', 'btnTempTruss'],
+  tower: ['btnTempTower'],
+  floating: [],
+  cantilever: ['btnTempCant'],
+  sandbox: ['btnTempDeck', 'btnTempTruss', 'btnTempCable', 'btnTempTower', 'btnTempCant']
+};
+function updateTemplateButtons(){
+  if (!currentLevel) return;
+  const want = TPL_MAP[currentLevel.type] || [];
+  let any = false;
+  for (const id of ['btnTempDeck', 'btnTempTruss', 'btnTempCable', 'btnTempTower', 'btnTempCant']){
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const show = want.includes(id) && (id !== 'btnTempCable' || currentLevel.free || stock.cable > 0);
+    el.style.display = show ? '' : 'none';
+    if (show) any = true;
+  }
+  const g = document.getElementById('tplGroup');
+  if (g) g.style.display = any ? 'flex' : 'none';
+}
+
+/* ===================== 渲染 ===================== */
+function stressColor(bm){
+  const s = beamStrain(bm);
+  const m = MATERIALS[bm.mat];
+  const intensity = Math.min(1, Math.abs(s) / m.breakStrain);
+  const light = 58 - intensity * 30;
+  return s >= 0 ? `hsl(8, 85%, ${light}%)` : `hsl(212, 85%, ${light}%)`;
+}
+
+/* ===================== 环境（地块 / 水域） ===================== */
+function drawLandBlock(x, topY){
+  const bw = 120;
+  ctx.fillStyle = '#cdb89a';
+  ctx.fillRect(x - bw/2, topY, bw, groundY - topY);
+  ctx.fillStyle = '#9cc79f';
+  ctx.fillRect(x - bw/2, topY, bw, 12);
+  ctx.strokeStyle = 'rgba(90,80,60,0.5)'; ctx.lineWidth = 2;
+  ctx.strokeRect(x - bw/2, topY, bw, groundY - topY);
+}
+
+function drawEnvironment(){
+  const L = currentLevel;
+  if (L.type === 'floating') return; // 浮桥自带水面与浮桶
+  if (L.type === 'sandbox'){
+    ctx.fillStyle = 'rgba(120,140,160,0.22)';
+    ctx.fillRect(0, groundY, W, H - groundY);
+    return;
+  }
+  const anchors = getAnchors();
+  // 跨越的水域（桥 / 悬索 / 悬臂）：下为深水，贴近水线有一圈浅滩，桥墩可立于滩上
+  if (L.type !== 'tower' && anchors.length >= 1){
+    let x0 = anchors[0].x;
+    let x1 = anchors.length >= 2 ? anchors[anchors.length-1].x : W;
+    ctx.fillStyle = '#e2d9c4';
+    ctx.fillRect(x0, groundY, x1 - x0, 16);
+    ctx.fillStyle = 'rgba(64,150,210,0.20)';
+    ctx.fillRect(x0, groundY + 16, x1 - x0, H - groundY - 16);
+    ctx.strokeStyle = 'rgba(64,150,210,0.5)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let x = x0; x <= x1; x += 8){
+      const y = groundY + 16 + Math.sin(x*0.05 + performance.now()*0.002)*2;
+      if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(40,90,140,0.5)'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('深谷水域（可在滩上设墩）', (x0 + x1)/2, groundY + 40);
+  }
+  // 两岸地块 / 基座：把同一根立柱上的上下锚点合并成一块高地，只在高地顶画草皮
+  const landGroups = [];
+  for (const a of anchors){
+    const g = landGroups.find(g => Math.abs(g.x - a.x) < 48);
+    if (g) g.topY = Math.min(g.topY, a.y);
+    else landGroups.push({ x: a.x, topY: a.y });
+  }
+  for (const g of landGroups) drawLandBlock(g.x, g.topY);
+}
+
+function render(){
+  /* 棉花糖高塔：三维任务，交给独立的三维渲染器（其余关卡仍是二维） */
+  if (t3Active()){ t3Render(); return; }
+  ctx.clearRect(0, 0, W, H);
+  ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(80,120,170,0.10)';
+  const grid = 28;
+  ctx.beginPath();
+  for (let x = 0; x <= W; x += grid){ ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+  for (let y = 0; y <= H; y += grid){ ctx.moveTo(0, y); ctx.lineTo(W, y); }
+  ctx.stroke();
+
+  if (currentLevel.type === 'floating'){
+    const waterY = groundY + currentLevel.waterY;
+    ctx.fillStyle = 'rgba(66,153,225,0.18)';
+    ctx.fillRect(0, waterY, W, H - waterY);
+    ctx.strokeStyle = 'rgba(66,153,225,0.5)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, waterY); ctx.lineTo(W, waterY); ctx.stroke();
+    for (const b of buckets){
+      ctx.fillStyle = 'rgba(200,210,220,0.9)';
+      ctx.fillRect(b.node.x - b.width/2, b.node.y - b.height/2, b.width, b.height);
+      ctx.strokeStyle = '#7a8a99'; ctx.lineWidth = 2;
+      ctx.strokeRect(b.node.x - b.width/2, b.node.y - b.height/2, b.width, b.height);
+      ctx.fillStyle = '#556677'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('19L 浮桶', b.node.x, b.node.y + 4);
+    }
+  }
+
+  drawEnvironment();
+
+  ctx.strokeStyle = 'rgba(90,110,130,0.35)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
+
+  if (payload && !payload.crown && currentLevel.type !== 'cantilever'){
+    const px = currentLevel.payload.x * W;
+    ctx.strokeStyle = 'rgba(46,158,91,.4)'; ctx.setLineDash([8, 6]); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(px, groundY - 140); ctx.lineTo(px, groundY); ctx.stroke(); ctx.setLineDash([]);
+  }
+  if (currentLevel.type === 'tower'){
+    const ty = groundY - currentLevel.targetHeight;
+    ctx.strokeStyle = 'rgba(224,72,58,.5)'; ctx.setLineDash([10, 6]); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(W, ty); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(224,72,58,.7)'; ctx.font = '12px sans-serif';
+    ctx.fillText('目标高度', 72, ty - 6);
+  }
+
+  for (const bm of beams){
+    const a = bm.a, b = bm.b;
+    if (bm.broken){
+      ctx.strokeStyle = 'rgba(150,60,60,0.55)'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.setLineDash([]);
+      continue;
+    }
+    ctx.strokeStyle = (mode === 'test') ? stressColor(bm) : MATERIALS[bm.mat].color;
+    ctx.lineWidth = MATERIALS[bm.mat].width;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+
+  for (const n of nodes){
+    if (n.pinned){
+      ctx.fillStyle = '#33415c'; ctx.fillRect(n.x - 7, n.y - 7, 14, 14);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(n.x - 7, n.y - 7, 14, 14);
+    } else {
+      ctx.fillStyle = '#1f2933';
+      ctx.beginPath(); ctx.arc(n.x, n.y, 5, 0, Math.PI*2); ctx.fill();
+      if (n.glued){ // 胶合环：胶带=黄 / 粘胶=粉
+        const gc = MATERIALS[n.glued] ? MATERIALS[n.glued].color : '#f0c86e';
+        ctx.strokeStyle = gc; ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.arc(n.x, n.y, 9.5, 0, Math.PI*2); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(n.x, n.y, 11.5, 0, Math.PI*2); ctx.stroke();
+      }
+    }
+  }
+
+  if (mode === 'build' && currentTool === 'build' && mouse.down && dragStart && previewEnd){
+    if (!isJointMat(currentMat)){
+      const sx = dragStart.node ? dragStart.node.x : dragStart.x;
+      const sy = dragStart.node ? dragStart.node.y : dragStart.y;
+      ctx.strokeStyle = (currentLevel.free || stock[currentMat] > 0) ? MATERIALS[currentMat].color : '#e0483a';
+      ctx.lineWidth = MATERIALS[currentMat].width; ctx.setLineDash([6, 5]);
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(previewEnd.x, previewEnd.y); ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+
+  if (mode === 'build' && currentTool === 'build' && isJointMat(currentMat)){
+    const nn = findNodeNear(mouse.x, mouse.y);
+    if (nn){
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = MATERIALS[currentMat].color; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.arc(nn.x, nn.y, 12, 0, Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(27,37,48,.75)'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(nn.glued ? '点此解除胶合' : '点此上胶', nn.x, nn.y - 18);
+    }
+  }
+
+  for (const im of impulses){
+    ctx.strokeStyle = `rgba(224,72,58,${im.life})`; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(im.x, im.y, im.r, 0, Math.PI*2); ctx.stroke();
+  }
+
+  if (payload){
+    if (payload.crown){
+      // 棉花糖：经典挑战里唯一的“目标载荷”，看起来蓬松轻盈，其实会给细意面塔施压
+      const r = payload.radius;
+      ctx.fillStyle = 'rgba(255,246,249,0.95)';
+      ctx.beginPath(); ctx.arc(payload.x, payload.y, r, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(222,150,172,0.8)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(payload.x, payload.y, r, 0, Math.PI*2); ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(payload.x - r*0.33, payload.y - r*0.33, r*0.42, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(222,150,172,0.5)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(payload.x - r*0.33, payload.y - r*0.33, r*0.42, 0, Math.PI*2); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#1f2933';
+      ctx.beginPath(); ctx.arc(payload.x, payload.y, payload.radius, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('kg', payload.x, payload.y);
+      if (!payload.active){
+        ctx.fillStyle = '#e0483a';
+        const left = Math.max(0, currentLevel.payload.delay - payload.frame);
+        ctx.fillText(left, payload.x, payload.y - payload.radius - 14);
+      }
+    }
+  }
+
+  updateHUD();
+}
+
+function updateHUD(){
+  if (t3Active()){ t3UpdateHUD(); return; }
+  const structBeams = beams.filter(b => !b.payloadCable);
+  const broken = structBeams.filter(b => b.broken).length;
+  let maxStress = 0;
+  for (const b of structBeams){ if (!b.broken){ const s = Math.abs(beamStrain(b)) / MATERIALS[b.mat].breakStrain; if (s > maxStress) maxStress = s; } }
+  const stateText = { building:'建造中', testing:'测试中', pass:'已通关', fail:'已失败' }[levelState];
+  const hud = document.getElementById('hud');
+  let extra = '';
+  if (currentLevel.type === 'tower'){
+    const sc = (mode === 'build' || !payload)
+      ? Math.round(computeLateralScore()*100)
+      : Math.round(sideScore*100);
+    let topNode = null;
+    for (const n of nodes){ if (!n.pinned && !n.bucket && (!topNode || n.y < topNode.y)) topNode = n; }
+    const isCrownUp = payload && payload.crown && payload.active && !(payload.y + payload.radius >= groundY - 1);
+    const h = Math.max(0, Math.round(groundY - (isCrownUp ? payload.y : (topNode ? topNode.y : groundY))));
+    const target = currentLevel.targetHeight || 0;
+    const hColor = h >= target ? 'var(--ok)' : 'var(--ink)';
+    extra =
+      `<div class="hrow"><span class="hstate"></span>侧稳<b style="color:${sc >= 70 ? 'var(--ok)' : sc >= 40 ? 'var(--warn)' : 'var(--bad)'}">${sc}%</b></div>` +
+      `<div class="hstat"><span>${isCrownUp ? '棉糖顶' : '塔顶'}高</span><b style="color:${hColor}">${h}</b><span style="color:var(--faint)">/ ${target}px</span></div>`;
+  }
+  if (currentLevel.type === 'floating'){
+    extra = `<div class="hrow"><span class="hstate"></span>下沉≤<b>${currentLevel.pass.maxSink}px</b></div>`;
+  }
+  hud.innerHTML =
+    `<div class="hrow"><span class="hstate ${levelState}"></span><b>${stateText}</b></div>` +
+    `<div class="divider"></div>` +
+    `<div class="hstat"><span>应力</span><b style="color:${maxStress >= 0.85 ? 'var(--bad)' : maxStress >= 0.6 ? 'var(--warn)' : ''}">${Math.round(maxStress*100)}%</b></div>` +
+    `<div class="hstat"><span>断裂</span><b style="color:${broken ? 'var(--bad)' : 'var(--ok)'}">${broken}/${beams.length}</b></div>` + extra;
+}
+
+function setTip(t){ document.getElementById('tip').textContent = t; }
+
+/* ===================== 过程性评价（自动评价引擎） ===================== */
+const RUBRIC_ITEMS = [
+  { key:'ta1', text:'解释结构的含义，感受结构的丰富性', tags:'TA' },
+  { key:'et2', text:'进行简单的受力分析，并辨析结构的一般分类', tags:'ET、TD' },
+  { key:'et3', text:'能描述哪些因素对结构的稳定性、强度产生影响，并能运用其原理进行简单的结构设计', tags:'ET、ID' },
+  { key:'ta4', text:'能说明结构对产品功能实现的影响', tags:'TA、ET' },
+  { key:'ta5', text:'能从技术和文化的角度赏析和评价经典结构', tags:'TA、ET' },
+  { key:'id6', text:'能根据需求进行结构方案设计并绘制设计图样', tags:'ID、TD' },
+  { key:'cm7', text:'能选择合适的设计方案，做出模型或原型并进行功能测试', tags:'ET、CM' },
+  { key:'sc8', text:'结构方案的综合表现：安全余量、刚度抗变形、用料经济、结构形式与功能达成', tags:'ET、ID、CM' }
+];
+
+let sessionLog = { levels: {} };
+let rubricOverride = {};
+let studentInfo = { name: '', cls: '' };
+try { const s = localStorage.getItem('sg_sessionLog'); if (s) sessionLog = JSON.parse(s); } catch(e){}
+try { const s = localStorage.getItem('sg_rubricOverride'); if (s) rubricOverride = JSON.parse(s); } catch(e){}
+try { const s = localStorage.getItem('sg_studentInfo'); if (s) studentInfo = JSON.parse(s); } catch(e){}
+
+function saveLog(){
+  try {
+    localStorage.setItem('sg_sessionLog', JSON.stringify(sessionLog));
+    localStorage.setItem('sg_rubricOverride', JSON.stringify(rubricOverride));
+    localStorage.setItem('sg_studentInfo', JSON.stringify(studentInfo));
+  } catch(e){}
+}
+
+/* ===================== 学生信息 / 云端提交 / 排行榜 =====================
+   进入项目先登记「姓名 + 班级」；完成整个项目（全部关卡通过）后，把评价数据
+   POST 到 QuickForm；排行榜从同一个链接拉取（/all 返回全部提交记录）。 */
+const TEST_DEFAULT_STUDENT = { name: '测试学生', cls: '高一(1)班' };
+function submitCfg(){
+  return Object.assign({ url: 'https://quickform.cn/api/r5a3ly81xx', auto: true, rankBy: 'height' },
+    (CONFIG && CONFIG.submit) || {});
+}
+let projectSubmitted = false;
+
+function openEntry(){
+  const nEl = document.getElementById('entryName'), cEl = document.getElementById('entryClass');
+  if (!nEl || !cEl) return;
+  nEl.value = studentInfo.name || TEST_DEFAULT_STUDENT.name;
+  cEl.value = studentInfo.cls || TEST_DEFAULT_STUDENT.cls;
+  document.getElementById('entryOverlay').classList.add('open');
+  setTimeout(() => { try { nEl.focus(); nEl.select(); } catch(e){} }, 60);
+}
+function closeEntry(){
+  const name = (document.getElementById('entryName').value || '').trim() || TEST_DEFAULT_STUDENT.name;
+  const cls  = (document.getElementById('entryClass').value || '').trim() || TEST_DEFAULT_STUDENT.cls;
+  if (studentInfo.name !== name || studentInfo.cls !== cls) projectSubmitted = false;  // 换人后重新允许自动提交
+  studentInfo.name = name; studentInfo.cls = cls; saveLog();
+  const rn = document.getElementById('rpName'), rc = document.getElementById('rpClass');
+  if (rn) rn.value = name;
+  if (rc) rc.value = cls;
+  document.getElementById('entryOverlay').classList.remove('open');
+  setTip('欢迎，' + cls + ' ' + name + '！从左侧「模板」可一键开局，也可直接拖画搭建。');
+}
+
+/* —— 轻提示 —— */
+let toastTimer = null;
+function showToast(msg){
+  let el = document.getElementById('submitToast');
+  if (!el){ el = document.createElement('div'); el.id = 'submitToast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3800);
+}
+
+/* —— 汇总评价数据 —— */
+function levelSummary(lv){
+  const L = sessionLog.levels[lv.name];
+  let ok = false, score = null, best = null, runs = 0;
+  if (L) for (const e of L.events){
+    if (e.type !== 'result') continue;
+    runs++;
+    if (e.ok) ok = true;
+    if (typeof e.score === 'number') score = (score == null) ? e.score : Math.max(score, e.score);
+    const hv = (typeof e.h === 'number') ? e.h : (typeof e.bestTop === 'number' ? e.bestTop : null);
+    if (hv != null) best = (best == null) ? hv : Math.max(best, hv);
+  }
+  return { name: lv.name, type: lv.type, ok: ok, score: score, best: best, runs: runs };
+}
+function buildEvaluation(){
+  const agg = evalAggregates();
+  const levels = LEVELS.map(levelSummary);
+  const tower = levels.filter(l => l.type === 'tower')[0];
+  const height = (tower && tower.best != null) ? Math.round(tower.best) : 0;
+  const scores = levels.filter(l => typeof l.score === 'number').map(l => l.score);
+  const score = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  const last = agg.lastResult;
+  return {
+    name: studentInfo.name || TEST_DEFAULT_STUDENT.name,
+    cls:  studentInfo.cls  || TEST_DEFAULT_STUDENT.cls,
+    height: height,                       // 最高值：桌面 → 棉花糖顶的最高高度(px)
+    score: score,                         // 各关综合评分的平均值
+    passed: levels.filter(l => l.ok).length,
+    total: levels.length,
+    levels: levels,
+    parts: (last && last.parts) || null,
+    at: new Date().toISOString()
+  };
+}
+function submitEvaluation(manual){
+  const cfg = submitCfg();
+  const data = buildEvaluation();
+  showToast(manual ? '正在提交评价数据…' : '项目完成，正在提交评价数据…');
+  return fetch(cfg.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+    .then(r => r.json().catch(() => ({})))
+    .then(j => {
+      if (j && (j.status === 'success' || j.message)){
+        projectSubmitted = true;
+        showToast('评价数据已提交 ✓　' + data.name + ' ' + data.cls + '　最高值 ' + data.height + ' px');
+      } else {
+        showToast('提交返回异常：' + JSON.stringify(j).slice(0, 90));
+      }
+      return j;
+    })
+    .catch(err => { showToast('提交失败：' + ((err && err.message) || err) + '（可在「评价」表重试）'); });
+}
+/* 自动提交只在本机、本学生、首次完成时触发一次（刷新页面不会重复提交）；手动按钮不受限。 */
+function submittedKey(){ return (studentInfo.name || '') + '|' + (studentInfo.cls || ''); }
+function hasAutoSubmitted(){ try { return localStorage.getItem('sg_autoSubmitted') === submittedKey(); } catch(e){ return false; } }
+function markAutoSubmitted(){ try { localStorage.setItem('sg_autoSubmitted', submittedKey()); } catch(e){} }
+function maybeSubmitProject(){
+  const cfg = submitCfg();
+  if (!cfg.auto || projectSubmitted || hasAutoSubmitted()) return;
+  const agg = evalAggregates();
+  if (LEVELS.length && agg.passedLevels.length >= LEVELS.length){
+    projectSubmitted = true;   // 先占位，避免同一次会话里多次触发
+    submitEvaluation(false).then(j => { if (j && (j.status === 'success' || j.message)) markAutoSubmitted(); });
+  }
+}
+
+/* —— 排行榜 —— */
+function escHtml(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function openLeaderboard(){ document.getElementById('lbOverlay').classList.add('open'); loadLeaderboard(); }
+function loadLeaderboard(){
+  const body = document.getElementById('lbBody');
+  if (!body) return;
+  body.innerHTML = '<tr><td colspan="6" class="lbEmpty">加载中…</td></tr>';
+  const cfg = submitCfg();
+  const url = cfg.url.replace(/\/+$/, '') + '/all';
+  fetch(url).then(r => r.json()).then(j => renderLeaderboard((j && (j.submissions || j.data)) || []))
+    .catch(err => { body.innerHTML = '<tr><td colspan="6" class="lbEmpty">排行榜加载失败：' + escHtml((err && err.message) || err) + '</td></tr>'; });
+}
+function renderLeaderboard(subs){
+  const body = document.getElementById('lbBody');
+  const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
+  const rows = subs.map(s => ({
+    name: s.name || s['姓名'] || '—',
+    cls:  s.cls  || s['班级'] || '—',
+    height: num(s.height != null ? s.height : s['最高值']),
+    score:  num(s.score  != null ? s.score  : s['综合评分']),
+    at: s.submitted_at || s.at || ''
+  })).filter(r => r.name !== '—' || r.height != null || r.score != null);
+  if (!rows.length){ body.innerHTML = '<tr><td colspan="6" class="lbEmpty">还没有提交记录。完成挑战并提交后就会出现在这里。</td></tr>'; return; }
+  const key = (submitCfg().rankBy === 'score') ? 'score' : 'height';
+  rows.sort((a, b) => ((b[key] || 0) - (a[key] || 0)) || ((b.score || 0) - (a.score || 0)));
+  let html = '';
+  rows.forEach((r, i) => {
+    const rk = i + 1;
+    const rkCls = rk === 1 ? 'r1' : rk === 2 ? 'r2' : rk === 3 ? 'r3' : '';
+    const me = (studentInfo.name && r.name === studentInfo.name) ? ' class="me"' : '';
+    html += '<tr' + me + '>' +
+      '<td class="rank ' + rkCls + '">' + rk + '</td>' +
+      '<td class="nm">' + escHtml(r.name) + '</td>' +
+      '<td class="ctr">' + escHtml(r.cls) + '</td>' +
+      '<td class="ctr"><b>' + (r.height != null ? Math.round(r.height) + ' px' : '—') + '</b></td>' +
+      '<td class="ctr">' + (r.score != null ? Math.round(r.score) : '—') + '</td>' +
+      '<td class="ctr" style="color:var(--faint);font-size:11.5px">' + escHtml(String(r.at).replace('T', ' ').slice(0, 16)) + '</td>' +
+    '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+/* —— 事件绑定（缺失元素不会阻塞其它绑定） —— */
+function bind(id, ev, fn){ const el = document.getElementById(id); if (el) el[ev] = fn; else console.warn('missing #'+id); }
+bind('entryGo', 'onclick', closeEntry);
+const enN = document.getElementById('entryName');
+if (enN) enN.addEventListener('keydown', e => { if (e.key === 'Enter') { const c = document.getElementById('entryClass'); if (c) c.focus(); } });
+const enC = document.getElementById('entryClass');
+if (enC) enC.addEventListener('keydown', e => { if (e.key === 'Enter') closeEntry(); });
+bind('btnLeaderboard', 'onclick', openLeaderboard);
+bind('lbClose', 'onclick', () => document.getElementById('lbOverlay').classList.remove('open'));
+bind('lbRefresh', 'onclick', loadLeaderboard);
+bind('rpSubmit', 'onclick', () => submitEvaluation(true));
+bind('rpLb', 'onclick', openLeaderboard);
+
+function logEvent(type, data={}){
+  const lv = currentLevel ? currentLevel.name : '未知关卡';
+  if (!sessionLog.levels[lv]) sessionLog.levels[lv] = { events: [] };
+  sessionLog.levels[lv].events.push({ t: Date.now(), type, ...data });
+  if (sessionLog.levels[lv].events.length > 500) sessionLog.levels[lv].events.shift();
+  saveLog();
+}
+
+function structureStats(){
+  const live = beams.filter(b => !b.broken && !b.payloadCable);
+  const idOf = n => nodes.indexOf(n);
+  const adj = new Map();
+  for (const bm of live){
+    const a = idOf(bm.a), b = idOf(bm.b);
+    if (!adj.has(a)) adj.set(a, new Set());
+    if (!adj.has(b)) adj.set(b, new Set());
+    adj.get(a).add(b); adj.get(b).add(a);
+  }
+  let triPairs = 0;
+  for (const bm of live){
+    const sa = adj.get(idOf(bm.a)), sb = adj.get(idOf(bm.b));
+    if (!sa || !sb) continue;
+    for (const x of sa) if (sb.has(x)) triPairs++;
+  }
+  const tris = Math.round(triPairs / 3);
+  let tension = 0, compression = 0, maxStress = 0;
+  for (const bm of live){
+    // 按「真实应变正负」判定拉/压：应变 > 0 = 被拉长(受拉)，< 0 = 被压短(受压)。
+    // 早期版本用材料的 cable 属性判定，导致报告里出现「受拉构件 0 根」的错误统计。
+    const e = beamStrain(bm);
+    if (e > 0.0008) tension++; else if (e < -0.0008) compression++;
+    const s = Math.abs(e) / MATERIALS[bm.mat].breakStrain;
+    if (s > maxStress) maxStress = s;
+  }
+  let span = 0, height = 0;
+  const solid = nodes.filter(n => !n.bucket);
+  if (solid.length){
+    const xs = solid.map(n => n.x), ys = solid.map(n => n.y);
+    span = Math.round(Math.max(...xs) - Math.min(...xs));
+    height = t3Active() ? Math.round(Math.max(0, ...ys)) : Math.round(groundY - Math.min(...ys));
+  }
+  let form = '梁式/自定义';
+  if (tris >= 3 && tension >= 3) form = '桁架+拉索混合';
+  else if (tension >= 3 && tension >= compression) form = '悬索/张拉类';
+  else if (tris >= 3) form = '桁架类';
+  if (currentLevel.type === 'tower' && height > span) form = '高塔类';
+  if (currentLevel.type === 'cantilever') form = '悬臂类';
+  return { tris, tension, compression, beams: live.length, span, height, maxStress, form,
+    triRatio: live.length ? tris / live.length : 0 };
+}
+
+/* 塔类侧向稳定度 0~1：模拟真实棉花糖塔的“三维”问题——高窄无斜撑的塔会摇晃倒塌。
+   影响因子：① 底座宽度 / 塔高（越宽越稳） ② 三角形斜撑占比（X 撑抗侧向变形）。 */
+function computeLateralScore(){
+  const st = structureStats();
+  const solid = nodes.filter(n => !n.bucket && !n.pinned);
+  if (!solid.length) return 1;
+  const ys = solid.map(n => n.y);
+  const topY = Math.min(...ys);
+  const h = Math.max(60, groundY - topY);
+  // 基底宽度：取塔底部 35% 高度范围内的节点
+  const cutY = groundY - h * 0.35;
+  const base = solid.filter(n => n.y >= cutY);
+  const baseW = base.length
+    ? Math.max(...base.map(n => n.x)) - Math.min(...base.map(n => n.x))
+    : st.span;
+  const wide = Math.max(0, Math.min(1, (baseW + 24) / (h * 0.42)));
+  const brace = Math.max(0, Math.min(1, st.triRatio * 2.6));
+  return Math.max(0, Math.min(1, wide * 0.55 + brace * 0.45));
+}
+
+function evalAggregates(){
+  let tests = 0, blueprints = 0, improvements = 0;
+  const results = [], forms = new Set(), passedLevels = new Set();
+  let lastSnap = null;
+  for (const [lvName, L] of Object.entries(sessionLog.levels)){
+    let lastWasFail = false, changedAfterFail = false;
+    for (const e of L.events){
+      if (e.type === 'test'){
+        tests++; lastSnap = e; forms.add(e.form || '未分类');
+        if (lastWasFail) changedAfterFail = true;
+      }
+      if (e.type === 'build' && lastWasFail) changedAfterFail = true;
+      if (e.type === 'template' && lastWasFail) changedAfterFail = true;
+      if (e.type === 'result'){
+        results.push({ lv: lvName, ok: e.ok, brokenRatio: e.brokenRatio, maxStress: e.maxStress,
+          score: e.score, parts: e.parts });
+        if (e.ok) passedLevels.add(lvName);
+        if (lastWasFail && changedAfterFail){ improvements++; }
+        lastWasFail = !e.ok; changedAfterFail = false;
+      }
+      if (e.type === 'blueprint') blueprints++;
+    }
+  }
+  return { tests, blueprints, improvements, results, forms: [...forms],
+    passedLevels: [...passedLevels], attempts: Object.keys(sessionLog.levels).length,
+    lastSnap, lastResult: results[results.length-1] || null };
+}
+
+/* ===================== 实时多维评分（测试过程中不断跳动） =====================
+   五个维度各 0~100 分，按教师可调权重加权成总分：
+     安全余量 —— 当前最大应力利用率（越接近断裂越低）
+     刚度抗变形 —— 节点相对建造姿态的最大位移
+     用料经济 —— 剩余库存比例（用得越少越经济）
+     结构形式 —— 三角形占比与数量（是否真的用了桁架思维）
+     功能达成 —— 关卡目标完成度（承重高度 / 塔高 / 桥面离水） */
+const SCORE_META = [
+  { k: 'safety', nm: '安全余量', c: '#1f9d5c' },
+  { k: 'stiff',  nm: '刚度',     c: '#2563eb' },
+  { k: 'econ',   nm: '用料',     c: '#7c5cd6' },
+  { k: 'form',   nm: '结构形式', c: '#d98a12' },
+  { k: 'func',   nm: '功能达成', c: '#0e8f9e' }
+];
+
+function scoreCfg(){
+  return Object.assign({
+    wSafety: 30, wStiff: 20, wEcon: 15, wForm: 15, wFunc: 20,
+    defRef: 70, triRef: 0.45, triCountRef: 6, stockRef: 0.30,
+    gradeGood: 85, gradeOk: 70, gradePass: 55, failFactor: 0.45
+  }, CONFIG.score || {});
+}
+
+const clamp01 = v => Math.max(0, Math.min(1, v));
+
+function currentUtilization(){
+  let u = 0;
+  for (const bm of beams){
+    if (bm.broken) continue;
+    const s = Math.abs(beamStrain(bm)) / MATERIALS[bm.mat].breakStrain;
+    if (s > u) u = s;
+  }
+  return u;
+}
+
+function maxDeflection(){
+  let d = 0;
+  for (const n of nodes){
+    if (n.pinned || n.bx === undefined) continue;
+    const dz = (n.z || 0) - (n.bz || 0);
+    const dd = Math.hypot(n.x - n.bx, n.y - n.by, dz);
+    if (dd > d) d = dd;
+  }
+  return d;
+}
+
+function stockLeftRatio(){
+  let total = 0, left = 0;
+  for (const k of Object.keys(stock0)){
+    const t = stock0[k] || 0;
+    if (t <= 0) continue;
+    total += t; left += Math.max(0, stock[k] || 0);
+  }
+  return total > 0 ? left / total : 1;
+}
+
+function computeLiveScore(){
+  const C = scoreCfg();
+  const st = structureStats();
+  const u = currentUtilization();                 // 应力利用率，1 = 正好到断裂点
+  const defl = maxDeflection();
+  const broken = beams.filter(b => b.broken).length;
+
+  const safety = clamp01(1 - u / 0.9) * 100 - broken * 12;
+  // 浮桥整体下沉是正常物理现象，刚度基准相应放宽，否则浮桥永远拿不到合理分
+  const defRef = currentLevel.type === 'floating' ? C.defRef * 1.9 : C.defRef;
+  const stiff  = clamp01(1 - defl / Math.max(20, defRef)) * 100;
+  const econ   = clamp01(stockLeftRatio() / Math.max(0.05, C.stockRef)) * 100;
+
+  const triR = clamp01(st.triRatio / Math.max(0.05, C.triRef));
+  const triN = clamp01(st.tris / Math.max(1, C.triCountRef));
+  const form = (triR * 0.6 + triN * 0.4) * 100;
+
+  // 功能达成：按关卡目标实时计算
+  let func = 0, funcHint = '';
+  const type = currentLevel.type;
+  if (type === 'sandbox'){
+    func = clamp01(1 - defl / Math.max(20, C.defRef)) * 100;
+    funcHint = '自由建造：以变形控制计分';
+  } else if (type === 'tower'){
+    const target = currentLevel.targetHeight || 240;
+    // 三维棉花糖塔：高度取三维引擎的「最高值」（松手后棉花糖顶达到过的最高点）
+    let h = 0;
+    if (t3Active()) h = T3.sim ? T3.bestTop : ((t3ApexNode() ? t3ApexNode().y : 0) + T3CFG.marshR);
+    else if (payload) h = groundY - payload.y;
+    func = clamp01(h / target) * 100;
+    funcHint = '棉花糖最高值 ' + Math.round(h) + ' / 参考 ' + Math.round(target) + ' px';
+  } else if (type === 'floating'){
+    const waterY = groundY + currentLevel.waterY;
+    const deck = nodes.filter(n => !n.bucket && !n.pinned && beams.some(b => !b.broken && (b.a === n || b.b === n)));
+    const deckSink = deck.length ? Math.max(...deck.map(n => n.y - waterY)) : 0;
+    const pSink = payload ? Math.max(0, (payload.y + payload.radius) - waterY) : 0;
+    const sink = Math.max(deckSink, pSink);
+    func = clamp01(1 - Math.max(0, sink) / Math.max(1, currentLevel.pass.maxSink)) * 100;
+    funcHint = '桥面入水 ' + Math.round(Math.max(0, sink)) + 'px / 允许 ' + currentLevel.pass.maxSink + 'px';
+  } else {
+    // 桥 / 悬臂：砝码被托住的高度（离地越高 = 结构越没被压垮）
+    const clear = payload ? (groundY - 45) - payload.y : 0;
+    func = clamp01(clear / 110) * 100;
+    funcHint = '砝码离地 ' + Math.round(Math.max(0, clear)) + 'px';
+  }
+
+  const parts = {
+    safety: Math.max(0, Math.min(100, safety)),
+    stiff:  Math.max(0, Math.min(100, stiff)),
+    econ:   Math.max(0, Math.min(100, econ)),
+    form:   Math.max(0, Math.min(100, form)),
+    func:   Math.max(0, Math.min(100, func))
+  };
+  const wSum = (C.wSafety + C.wStiff + C.wEcon + C.wForm + C.wFunc) || 100;
+  let total = (parts.safety * C.wSafety + parts.stiff * C.wStiff + parts.econ * C.wEcon +
+               parts.form * C.wForm + parts.func * C.wFunc) / wSum;
+  if (levelState === 'fail') total *= C.failFactor;
+  if (broken > 0) total = Math.min(total, 72);
+  return { total: Math.round(total), parts, funcHint, broken, util: u, defl };
+}
+
+function gradeOf(total, C){
+  C = C || scoreCfg();
+  if (total >= C.gradeGood) return { t: '优秀', c: 'g1' };
+  if (total >= C.gradeOk)   return { t: '良好', c: 'g2' };
+  if (total >= C.gradePass) return { t: '合格', c: 'g3' };
+  return { t: '待改进', c: 'g4' };
+}
+
+let lastScoreShown = -1;
+function updateScoreHud(){
+  const host = document.getElementById('scoreHud');
+  if (!host) return;
+  if (mode !== 'test'){ lastScoreShown = -1; host.classList.remove('frozen'); return; }
+  const C = scoreCfg();
+  const S = computeLiveScore();
+  const vEl = document.getElementById('scVal');
+  const gEl = document.getElementById('scGrade');
+  const bEl = document.getElementById('scBars');
+  const shown = Math.round(S.total);
+  if (vEl.textContent !== String(shown)){
+    vEl.textContent = shown;
+    if (Math.abs(shown - lastScoreShown) >= 2){
+      vEl.classList.remove('bump'); void vEl.offsetWidth; vEl.classList.add('bump');
+    }
+    lastScoreShown = shown;
+  }
+  const g = gradeOf(S.total, C);
+  gEl.textContent = levelState === 'testing' ? g.t : (levelState === 'pass' ? g.t + ' · 通过' : g.t + ' · 未通过');
+  gEl.className = 'scGrade ' + g.c;
+  const col = S.total >= C.gradeGood ? '#1f9d5c' : S.total >= C.gradeOk ? '#2563eb' : S.total >= C.gradePass ? '#d98a12' : '#dc3c2f';
+  vEl.style.color = col;
+  let html = '';
+  for (const m of SCORE_META){
+    const v = Math.round(S.parts[m.k]);
+    const vc = v >= 75 ? '#1f9d5c' : v >= 50 ? '#d98a12' : '#dc3c2f';
+    html += '<div class="scRow"><span class="nm">' + m.nm + '</span>' +
+            '<span class="tr"><span class="fl" style="width:' + v + '%;background:' + vc + '"></span></span>' +
+            '<span class="vv">' + v + '</span></div>';
+  }
+  if (S.funcHint) html += '<div class="scRow" style="color:var(--faint);margin-top:5px">' + S.funcHint + '</div>';
+  bEl.innerHTML = html;
+  host.classList.toggle('frozen', levelState !== 'testing');
+  lastScore = S;
+}
+
+function scoreBreakdownHtml(S){
+  const C = scoreCfg();
+  let h = '<div id="scoreBreak"><div style="font-weight:700;margin-bottom:4px">综合评分 ' +
+    '<span style="color:' + (S.total >= C.gradeGood ? '#1f9d5c' : S.total >= C.gradeOk ? '#2563eb' : S.total >= C.gradePass ? '#d98a12' : '#dc3c2f') + '">' +
+    S.total + '</span> 分 · ' + gradeOf(S.total, C).t + '</div>';
+  const wmap = { safety: C.wSafety, stiff: C.wStiff, econ: C.wEcon, form: C.wForm, func: C.wFunc };
+  for (const m of SCORE_META){
+    const v = Math.round(S.parts[m.k]);
+    const vc = v >= 75 ? '#1f9d5c' : v >= 50 ? '#d98a12' : '#dc3c2f';
+    h += '<div class="sbRow"><span class="nm">' + m.nm + '<span style="color:var(--faint)"> ×' + wmap[m.k] + '</span></span>' +
+      '<span class="tr"><span class="fl" style="width:' + v + '%;background:' + vc + '"></span></span>' +
+      '<span class="vv">' + v + '</span></div>';
+  }
+  const tips = [];
+  if (S.parts.safety < 60) tips.push('应力已接近材料极限，安全余量不足——增加构件或减小跨度。');
+  if (S.parts.stiff < 60)  tips.push('变形过大——三角形（斜撑）能把四边形锁死，是最省料的“加刚”办法。');
+  if (S.parts.econ < 60)   tips.push('材料用得偏多——在满足功能的前提下精简构件，是工程经济性的核心。');
+  if (S.parts.form < 60)   tips.push('三角形偏少——桁架的优势来自把受弯变成受拉/受压。');
+  if (S.parts.func < 60)   tips.push('功能目标达成度低：' + (S.funcHint || '') + '。');
+  if (!tips.length) tips.push('各方面均衡，可作为本关的示范方案。');
+  h += '<div class="sbTip">' + tips.join('<br>') + '</div></div>';
+  return h;
+}
+
+function autoEvaluate(){
+  const R = Object.assign({ formsGood:3, formsPass:2, triRatioGood:0.35, stressMarginGood:0.85,
+    stockLeftGood:0.3, blueprintGood:2, blueprintPass:1 }, (CONFIG.rubric || {}));
+  const S = evalAggregates();
+  const out = {};
+  const rate = (v, good, pass) => v >= good ? '优良' : v >= pass ? '合格' : '不合格';
+
+  // 1 结构丰富性（TA）
+  {
+    const n = S.forms.length;
+    out.ta1 = { rating: S.tests === 0 ? null : rate(n, R.formsGood, R.formsPass),
+      ev: S.tests ? `共完成 ${S.tests} 次测试，涉及结构形式 ${n} 类：${S.forms.join('、')}` : '尚未进行任何测试' };
+  }
+  // 2 受力分析与结构分类（ET、TD）
+  {
+    const sn = S.lastSnap;
+    const mixed = sn && sn.tension > 0 && sn.compression > 0;
+    const okStress = S.results.filter(r => r.ok).map(r => r.maxStress);
+    const best = okStress.length ? Math.min(...okStress) : null;
+    const good = mixed && best !== null && best <= R.stressMarginGood;
+    const pass = mixed || S.tests >= 2;
+    out.et2 = { rating: S.tests === 0 ? null : (good ? '优良' : pass ? '合格' : '不合格'),
+      ev: `最近测试结构：受拉构件 ${sn ? sn.tension : 0} 根、受压构件 ${sn ? sn.compression : 0} 根（${sn ? sn.form : '—'}）；` +
+          (best !== null ? `通过测试中的最大应力利用率 ${Math.round(best*100)}%（≤${Math.round(R.stressMarginGood*100)}% 为有安全余量的设计）` : '尚无通过的测试') };
+  }
+  // 3 稳定性/强度原理运用（ET、ID）
+  {
+    const tr = S.lastSnap ? S.lastSnap.triRatio : 0;
+    const good = tr >= R.triRatioGood && S.improvements > 0;
+    const pass = tr >= R.triRatioGood || S.improvements > 0;
+    out.et3 = { rating: S.tests === 0 ? null : (good ? '优良' : pass ? '合格' : '不合格'),
+      ev: `最近结构三角形 ${S.lastSnap ? S.lastSnap.tris : 0} 个，占构件比 ${Math.round(tr*100)}%（≥${Math.round(R.triRatioGood*100)}% 为稳定性良好）；失败后改进迭代 ${S.improvements} 次` };
+  }
+  // 4 结构对功能实现的影响（TA、ET）
+  {
+    const np = S.passedLevels.length;
+    const good = np >= 2 || (np >= 1 && np >= S.attempts);
+    out.ta4 = { rating: S.tests === 0 ? null : (good ? '优良' : np >= 1 ? '合格' : '不合格'),
+      ev: `已挑战 ${S.attempts} 个课程、通过 ${np} 个；最近一次测试：${S.lastResult ? (S.lastResult.ok ? '通过' : '未通过') : '—'}` };
+  }
+  // 5 技术文化赏析（TA、ET）—— 教师评定
+  out.ta5 = { rating: null,
+    ev: '建议结合经典结构案例（赵州桥、港珠澳大桥、埃菲尔铁塔等）的课堂讨论，由教师评定' };
+  // 6 方案设计与图样（ID、TD）
+  out.id6 = { rating: rate(S.blueprints, R.blueprintGood, R.blueprintPass),
+    ev: `已导出设计图样 ${S.blueprints} 张（点击「设计图」可导出当前方案，建议每个方案导出一张）` };
+  // 7 模型与功能测试（ET、CM）
+  {
+    const np = S.passedLevels.length;
+    const totalGiven = Object.values(currentLevel.stock).reduce((a,b)=>a+b, 0);
+    const totalLeft = Object.values(stock).reduce((a,b)=>a+b, 0);
+    const leftRatio = totalGiven ? totalLeft / totalGiven : 0;
+    out.cm7 = { rating: S.tests === 0 ? null : (np > 0 && leftRatio >= R.stockLeftGood ? '优良' : (S.tests >= 2 || np > 0 ? '合格' : '不合格')),
+      ev: `完成测试 ${S.tests} 次；当前课程材料剩余率 ${Math.round(leftRatio*100)}%（≥${Math.round(R.stockLeftGood*100)}% 为用料经济）；${np ? '已通过 '+np+' 个课程' : '尚未通关'}` };
+  }
+  // 8 综合表现（安全余量 / 刚度 / 用料 / 结构形式 / 功能达成 加权）
+  {
+    const C = scoreCfg();
+    const scored = S.results.filter(r => typeof r.score === 'number');
+    if (!scored.length){
+      out.sc8 = { rating: null, ev: '尚无带综合评分的测试记录' };
+    } else {
+      const best = Math.max(...scored.map(r => r.score));
+      const avg = Math.round(scored.reduce((s, r) => s + r.score, 0) / scored.length);
+      const last = scored[scored.length - 1];
+      const rating = best >= C.gradeGood ? '优良' : best >= C.gradePass ? '合格' : '不合格';
+      const p = last.parts || {};
+      const fmt = v => Math.round(v || 0);
+      out.sc8 = { rating,
+        ev: `${scored.length} 次评分测试：最好 ${best} 分、平均 ${avg} 分。最近一次：安全 ${fmt(p.safety)} / 刚度 ${fmt(p.stiff)} / 用料 ${fmt(p.econ)} / 结构形式 ${fmt(p.form)} / 功能 ${fmt(p.func)}（各项满分 100）` };
+    }
+  }
+  return out;
+}
+
+function renderReport(){
+  const auto = autoEvaluate();
+  document.getElementById('rpName').value = studentInfo.name || '';
+  document.getElementById('rpClass').value = studentInfo.cls || '';
+  const tbody = document.querySelector('#rubricTable tbody');
+  tbody.innerHTML = '';
+  for (const item of RUBRIC_ITEMS){
+    const a = auto[item.key];
+    const ov = rubricOverride[item.key];
+    const rating = ov || a.rating || null;
+    let cells = '';
+    for (const r of ['优良','合格','不合格']){
+      const cls = rating === r ? (r === '优良' ? 'rated-good' : r === '合格' ? 'rated-ok' : 'rated-bad') : '';
+      const tag = ov === r ? '<span class="tagAuto">教师</span>'
+        : (a.rating === r && !ov && a.rating !== null ? '<span class="tagAuto">自动</span>' : '');
+      cells += `<td class="rated-cell ${cls}" data-item="${item.key}" data-rate="${r}">${tag}</td>`;
+    }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="item">${item.text}（${item.tags}）<span class="ev">${a.ev || ''}</span></td>` + cells;
+    tbody.appendChild(tr);
+  }
+}
+
+document.querySelector('#rubricTable').addEventListener('click', (e) => {
+  const td = e.target.closest('.rated-cell');
+  if (!td) return;
+  const key = td.dataset.item, r = td.dataset.rate;
+  if (rubricOverride[key] === r) delete rubricOverride[key];
+  else rubricOverride[key] = r;
+  saveLog(); renderReport();
+});
+
+document.getElementById('rpName').addEventListener('change', e => { studentInfo.name = e.target.value; saveLog(); });
+document.getElementById('rpClass').addEventListener('change', e => { studentInfo.cls = e.target.value; saveLog(); });
+
+document.getElementById('btnReport').onclick = () => { renderReport(); document.getElementById('reportOverlay').classList.add('open'); };
+document.getElementById('rpClose').onclick = () => document.getElementById('reportOverlay').classList.remove('open');
+document.getElementById('rpPrint').onclick = () => window.print();
+document.getElementById('rpExport').onclick = () => {
+  const auto = autoEvaluate();
+  const data = { student: studentInfo, exportedAt: new Date().toISOString(),
+    items: RUBRIC_ITEMS.map(it => ({ ...it, auto: auto[it.key].rating, override: rubricOverride[it.key] || null, evidence: auto[it.key].ev })),
+    aggregates: evalAggregates() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `评价报告-${studentInfo.name || '未命名'}.json`; a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById('rpClear').onclick = () => {
+  if (!confirm('确定清空本机全部设计过程记录和教师评定记录吗？')) return;
+  sessionLog = { levels: {} }; rubricOverride = {};
+  saveLog(); renderReport();
+};
+
+/* ===================== 设计图样导出（图样表达 TD） ===================== */
+function exportBlueprint(){
+  if (!nodes.length){ setTip('请先搭建结构，再导出设计图。'); return; }
+  const c = document.createElement('canvas');
+  c.width = 1400; c.height = 900;
+  const g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+  // 图框
+  g.strokeStyle = '#1f2933'; g.lineWidth = 3;
+  g.strokeRect(24, 24, c.width - 48, c.height - 48);
+  g.strokeRect(30, 30, c.width - 60, c.height - 60);
+  // 计算包围盒（含地面）
+  const is3D = t3Active();
+  const B = is3D ? t3Cam() : null;
+  const solid = nodes.filter(n => !n.bucket && !n.marsh);
+  const getPt = is3D
+    ? n => (t3Project(n, B) || { x: n.x, y: n.y })
+    : n => ({ x: n.x, y: n.y });
+  const pts = solid.map(getPt);
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  let minX = Math.min(...xs), maxX = Math.max(...xs);
+  let minY, maxY;
+  if (is3D){
+    minY = Math.min(...ys);
+    maxY = Math.max(...ys);
+  } else {
+    minY = Math.min(...ys, groundY - 380);
+    maxY = groundY;
+  }
+  const pad = 90;
+  const drawW = c.width - 120 - pad * 2, drawH = c.height - 200 - pad;
+  const sc = Math.min(drawW / Math.max(1, maxX - minX), drawH / Math.max(1, maxY - minY), 1.6);
+  const ox = pad + (drawW - (maxX - minX) * sc) / 2 - minX * sc;
+  const oy = pad + (drawH - (maxY - minY) * sc) / 2 - minY * sc;
+  const X = x => ox + x * sc, Y = y => oy + y * sc;
+  // 淡网格
+  g.strokeStyle = 'rgba(31,41,51,.07)'; g.lineWidth = 1;
+  for (let x = 60; x < c.width - 60; x += 40){ g.beginPath(); g.moveTo(x, 60); g.lineTo(x, c.height - 220); g.stroke(); }
+  for (let y = 60; y < c.height - 220; y += 40){ g.beginPath(); g.moveTo(60, y); g.lineTo(c.width - 60, y); g.stroke(); }
+  // 地面线 + 斜短线
+  const gLineY = is3D ? Y(maxY) + 18 : Y(groundY);
+  g.strokeStyle = '#1f2933'; g.lineWidth = 2.5;
+  g.beginPath(); g.moveTo(60, gLineY); g.lineTo(c.width - 60, gLineY); g.stroke();
+  g.lineWidth = 1.2;
+  for (let x = 70; x < c.width - 60; x += 24){ g.beginPath(); g.moveTo(x, gLineY); g.lineTo(x - 12, gLineY + 14); g.stroke(); }
+  // 梁（按材料区分线宽，全黑线——工程图风格）
+  g.lineCap = 'round';
+  for (const bm of beams){
+    const pa = getPt(bm.a), pb = getPt(bm.b);
+    g.strokeStyle = '#1f2933';
+    g.lineWidth = Math.max(1.5, MATERIALS[bm.mat].width * 0.55 * sc);
+    g.beginPath(); g.moveTo(X(pa.x), Y(pa.y)); g.lineTo(X(pb.x), Y(pb.y)); g.stroke();
+  }
+  // 节点与锚点
+  for (const n of solid){
+    const p = getPt(n);
+    if (n.pinned && !is3D){
+      g.fillStyle = '#1f2933';
+      g.fillRect(X(p.x) - 6, Y(p.y) - 6, 12, 12);
+      g.strokeStyle = '#1f2933'; g.lineWidth = 1.5;
+      for (let i = -1; i <= 1; i++){
+        g.beginPath(); g.moveTo(X(p.x) + i * 8, Y(p.y) + 8); g.lineTo(X(p.x) + i * 8 - 8, Y(p.y) + 18); g.stroke();
+      }
+    } else {
+      g.fillStyle = '#1f2933';
+      g.beginPath(); g.arc(X(p.x), Y(p.y), 3.5, 0, Math.PI * 2); g.fill();
+    }
+  }
+  const st = structureStats();
+  // 尺寸标注（跨度/高度）
+  if (solid.length){
+    const gy = gLineY + 34;
+    g.strokeStyle = '#1f2933'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(X(minX), gy); g.lineTo(X(maxX), gy); g.stroke();
+    for (const x of [minX, maxX]){ g.beginPath(); g.moveTo(X(x), gy - 6); g.lineTo(X(x), gy + 6); g.stroke(); }
+    g.fillStyle = '#1f2933'; g.font = '15px sans-serif'; g.textAlign = 'center';
+    const dimText = is3D ? `高塔高度 ${st.height} px · 底座跨度 ${st.span} px` : `跨度 ${Math.round((maxX - minX) / 10 * 10)} px`;
+    g.fillText(dimText, (X(minX) + X(maxX)) / 2, gy + 20);
+  }
+  // 标题栏
+  const tbW = 460, tbH = 118, tbX = c.width - 60 - tbW, tbY = c.height - 60 - tbH;
+  g.strokeStyle = '#1f2933'; g.lineWidth = 2; g.strokeRect(tbX, tbY, tbW, tbH);
+  g.lineWidth = 1; g.beginPath(); g.moveTo(tbX + 150, tbY); g.lineTo(tbX + 150, tbY + tbH);
+  g.moveTo(tbX + 300, tbY); g.lineTo(tbX + 300, tbY + tbH);
+  g.moveTo(tbX, tbY + 59); g.lineTo(tbX + tbW, tbY + 59); g.stroke();
+  g.fillStyle = '#1f2933'; g.font = 'bold 16px sans-serif'; g.textAlign = 'center';
+  g.fillText('结构设计图样', tbX + 75, tbY + 36);
+  g.font = '13px sans-serif';
+  g.fillText(studentInfo.name ? `姓名：${studentInfo.name}` : '姓名：____', tbX + 225, tbY + 36);
+  g.fillText(studentInfo.cls ? `班级：${studentInfo.cls}` : '班级：____', tbX + 380, tbY + 36);
+  g.fillText(`课程：${currentLevel.name.replace('课程 ', '')}`, tbX + 75, tbY + 92);
+  g.fillText(`构件 ${st.beams} · 三角形 ${st.tris}`, tbX + 225, tbY + 92);
+  const d = new Date();
+  g.fillText(`${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`, tbX + 380, tbY + 92);
+  // 下载
+  c.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `设计图样-${currentLevel.name.replace(/[^\w\u4e00-\u9fa5]/g, '')}.png`; a.click();
+    URL.revokeObjectURL(url);
+  });
+  logEvent('blueprint', { span: st.span, height: st.height, beams: st.beams });
+  setTip('设计图样已导出（计入图样表达评价）。建议每个方案导出一张，体现方案演进。');
+}
+document.getElementById('btnBlueprint').onclick = exportBlueprint;
+
+
+
+
+/* 模板/参考答案的「一键重开」：先清空场地再生成。
+   这样重复点击模板只会出现一份（原来会叠加出重复节点/构件，场地会乱），且改动仍可撤销。 */
+function resetField(){
+  const keepN = nodes.filter(n => n.bucket);
+  beams = beams.filter(bm => keepN.includes(bm.a) && keepN.includes(bm.b));
+  nodes = keepN.slice();
+  for (const a of currentLevel.anchors) addNode(a.x * W, groundY + a.y, true);
+  /* 清空场地 = 把之前用掉的材料全部退回，否则重复点模板会把库存耗光、只搭出一半 */
+  stock = currentLevel.free ? {} : clone(currentLevel.stock);
+  refreshMaterialBar();
+  T3 && (T3.apex = null, T3.marsh = null);
+}
+
+/* ===================== TOWER3D · 棉花糖高塔真三维模块 ===================== */
+/* TOWER3D_BEGIN
+   为什么这一关必须换成真三维 —— 依据官方 Marshmallow Challenge 规则（marshmallowchallenge.com）：
+     ① 独立站立 freestanding：不能锚/粘在桌面上，松手后必须靠自身几何站住。
+     ② 整颗棉花糖架在塔顶：它是一个"比看起来重"的顶部质量，不是砸下来的落锤。
+     ③ 判定 = 松手后能否自己站稳若干秒（塌了就是失败），量桌面→棉花糖顶的高度。
+     ④ 现实中学生是在三维里搭（宽底座三角形、拉索斜拉、捆扎加粗），二维侧壁无法表达。
+   因此本关交给独立三维引擎：三维 PBD 求解 + Canvas 2D 透视软渲染（零依赖、可离线、平板可用）。
+   其余关卡（纸桥/浮桥/悬臂/沙盒）保持原二维逻辑不变。 */
+
+const T3 = {
+  yaw: 0.9, pitch: 0.32, dist: 1100, focal: 1000,
+  tx: 0, ty: 0, tz: 0, cx0: 0, cy0: 0, W: 0, H: 0,
+  cons: [], parts: [], sim: false, frames: 0,
+  startTop: 0, curTop: 0, bestTop: 0, marsh: null, apex: null,
+  reason: '', dragging: false, dragFrom: null, preview: null,
+  lastDown: null, zoom: 1, dpr: 1
+};
+
+/* 三维物理/判定参数（教师可在 materials.json 的 physics 里覆盖同名键） */
+const T3CFG = {
+  gravity: 0.55, damping: 0.986, iter: 10, friction: 0.42,
+  nodeBaseMass: 0.30, densityK: 0.02, marshMass: 9, marshR: 15,
+  /* 棉花糖作为塔顶「粘胶」的作用半径：把最高点下方 capBand 内、水平 capRadius 内的节点都粘到一起 */
+  capBand: 46, capRadius: 90,
+  /* buckleK：欧拉屈曲标定常数。构件受压"轴力代理"(每帧累计纠偏量) 超过 buckleK/L² 即压弯失效，
+     所以同样的载荷下：长杆一压就弯、短杆稳如磐石 —— 这正是"加斜撑把长杆切成短杆"能大幅提升承载的原因。
+     已标定（教师可调）：参考答案 0 根屈曲、窄底无斜撑细长塔 3/6 根屈曲倒塌。调小=更容易屈曲。 */
+  buckleK: 600000, buckleSoft: 0.05, enableBuckle: true,
+  holdFrames: 300, noiseAmp: 0.03, maxFrames: 1500,
+  tableR: 420, baseFriction: 0.55
+};
+
+function t3Active(){ return !!(currentLevel && currentLevel.type === 'tower'); }
+
+/* ---------- 小规模三维向量工具 ---------- */
+function t3len(a, b){ const dx=b.x-a.x, dy=b.y-a.y, dz=(b.z||0)-(a.z||0); return Math.sqrt(dx*dx+dy*dy+dz*dz); }
+function t3Sub(a, b){ return { x:a.x-b.x, y:a.y-b.y, z:(a.z||0)-(b.z||0) }; }
+function t3Dot(a, b){ return a.x*b.x + a.y*b.y + a.z*b.z; }
+function t3Cross(a, b){ return { x:a.y*b.z-a.z*b.y, y:a.z*b.x-a.x*b.z, z:a.x*b.y-a.y*b.x }; }
+function t3Norm(v){ const l = Math.hypot(v.x, v.y, v.z) || 1; return { x:v.x/l, y:v.y/l, z:v.z/l }; }
+
+/* ---------- 相机 ---------- */
+function t3Cam(){
+  const cp = Math.cos(T3.pitch), sp = Math.sin(T3.pitch);
+  const cy = Math.cos(T3.yaw), sy = Math.sin(T3.yaw);
+  const eye = { x: T3.tx + T3.dist*cp*sy, y: T3.ty + T3.dist*sp, z: T3.tz + T3.dist*cp*cy };
+  const fwd = t3Norm(t3Sub({x:T3.tx,y:T3.ty,z:T3.tz}, eye));
+  const right = t3Norm(t3Cross(fwd, { x:0, y:1, z:0 }));
+  const up = t3Cross(right, fwd);
+  return { eye, fwd, right, up };
+}
+function t3Project(p, B){
+  const d = t3Sub(p, B.eye);
+  const cz = t3Dot(d, B.fwd);
+  if (cz <= 1) return null;
+  const cx = t3Dot(d, B.right), cy = t3Dot(d, B.up);
+  const f = T3.focal;
+  return { x: T3.cx0 + cx*f/cz, y: T3.cy0 - cy*f/cz, z: cz };
+}
+/* 屏幕点 → 世界射线 */
+function t3Ray(sx, sy, B){
+  const vx = (sx - T3.cx0) / T3.focal, vy = -(sy - T3.cy0) / T3.focal;
+  const dir = t3Norm({
+    x: B.right.x*vx + B.up.x*vy + B.fwd.x,
+    y: B.right.y*vx + B.up.y*vy + B.fwd.y,
+    z: B.right.z*vx + B.up.z*vy + B.fwd.z
+  });
+  return { o: B.eye, d: dir };
+}
+/* 射线打在桌面(y=0)上的点 */
+function t3HitGround(sx, sy, B){
+  const r = t3Ray(sx, sy, B);
+  if (Math.abs(r.d.y) < 1e-4) return null;
+  const t = (0 - r.o.y) / r.d.y;
+  if (t <= 0) return null;
+  return { x: r.o.x + r.d.x*t, y: 0, z: r.o.z + r.d.z*t };
+}
+/* 射线打在「过 P 且正对屏幕」的平面上（保证所见即所得） */
+function t3HitViewPlane(sx, sy, B, P){
+  const r = t3Ray(sx, sy, B);
+  const n = B.fwd;
+  const den = t3Dot(r.d, n);
+  if (Math.abs(den) < 1e-4) return null;
+  const t = t3Dot(t3Sub(P, r.o), n) / den;
+  if (t <= 0) return null;
+  return { x: r.o.x + r.d.x*t, y: r.o.y + r.d.y*t, z: r.o.z + r.d.z*t };
+}
+
+function t3SetViewport(){
+  T3.W = W; T3.H = H;
+  T3.cx0 = W / 2; T3.cy0 = H * 0.46;
+  T3.focal = Math.max(520, H * 1.55);
+}
+function t3FitView(){
+  let top = 0, rad = 0;
+  for (const n of nodes){
+    if (n.marsh) continue;
+    top = Math.max(top, n.y - T3CFG.marshR);
+    rad = Math.max(rad, Math.hypot(n.x, n.z || 0));
+  }
+  const target = currentLevel.targetHeight || 240;
+  top = Math.max(top, target * 0.8, 60);
+  T3.ty = top * 0.55;
+  T3.tx = 0; T3.tz = 0;
+  T3.dist = Math.max(700, (top + rad * 0.8) * 2.1);
+}
+
+/* ---------- 关卡装载 / 复位 ---------- */
+function t3OnLoadLevel(){
+  T3.cons = []; T3.parts = []; T3.sim = false; T3.frames = 0;
+  T3.marsh = null; T3.apex = null; T3.capNodes = null; T3.reason = ''; T3.preview = null; T3.dragFrom = null;
+  T3.startTop = 0; T3.curTop = 0; T3.bestTop = 0;
+  T3.yaw = 0.9; T3.pitch = 0.32;
+  t3SetViewport(); t3FitView();
+}
+
+/* ---------- 拾取 ---------- */
+function t3PickNode(sx, sy){
+  const B = t3Cam(); let best = null, bd = 15, bz = Infinity;
+  for (const n of nodes){
+    const p = t3Project(n, B); if (!p) continue;
+    const d = Math.hypot(p.x - sx, p.y - sy);
+    if (d < bd && p.z < bz){ bd = d; best = n; bz = p.z; }
+  }
+  return best;
+}
+function t3PickBeam(sx, sy){
+  const B = t3Cam(); let best = null, bd = 9, bz = Infinity;
+  for (const bm of beams){
+    const pa = t3Project(bm.a, B), pb = t3Project(bm.b, B);
+    if (!pa || !pb) continue;
+    const vx = pb.x-pa.x, vy = pb.y-pa.y;
+    const L2 = vx*vx + vy*vy; if (L2 < 1) continue;
+    let t = ((sx-pa.x)*vx + (sy-pa.y)*vy) / L2; t = Math.max(0, Math.min(1, t));
+    const d = Math.hypot(sx-(pa.x+vx*t), sy-(pa.y+vy*t));
+    if (d < bd){ bd = d; best = bm; bz = Math.min(pa.z, pb.z); }
+  }
+  return best;
+}
+
+/* ---------- 建造交互 ---------- */
+function t3OnDown(m){
+  T3.lastDown = { x:m.x, y:m.y };
+  const hit = t3PickNode(m.x, m.y);
+  if (hit){ T3.dragFrom = hit; }
+  else { T3.dragFrom = null; T3.dragging = true; }
+  T3.preview = { x:m.x, y:m.y };
+}
+function t3OnMove(m){
+  if (T3.dragging && T3.lastDown){
+    T3.yaw += (m.x - T3.lastDown.x) * 0.008;
+    T3.pitch += (m.y - T3.lastDown.y) * 0.006;
+    T3.pitch = Math.max(0.06, Math.min(1.15, T3.pitch));
+    T3.lastDown = { x:m.x, y:m.y };
+  } else if (T3.dragFrom){ T3.preview = { x:m.x, y:m.y }; }
+}
+function t3OnUp(m){
+  const start = T3.dragFrom;
+  const moved = T3.lastDown ? Math.hypot(m.x - T3.lastDown.x, m.y - T3.lastDown.y) > 6 : false;
+  T3.dragging = false; T3.preview = null; T3.lastDown = null; T3.dragFrom = null;
+  if (start && mode === 'test') return;
+
+  /* 擦除 */
+  if (currentTool === 'erase'){
+    const n = t3PickNode(m.x, m.y);
+    if (n){ deleteNode(n); pushHistory(); logEvent('del'); return; }
+    const bm = t3PickBeam(m.x, m.y);
+    if (bm){ deleteBeam(bm); pushHistory(); logEvent('del'); return; }
+    return;
+  }
+  /* 胶带/粘胶：听一定要点节点（三维里所有节点都是可上的） */
+  if (isJointMat(currentMat)){
+    const n = start || t3PickNode(m.x, m.y);
+    if (n) toggleGlue(n);
+    else setTip('选中胶带/粘胶后，点击「两根以上构件交汇」的节点上胶。');
+    return;
+  }
+  if (start){
+    let endNode = null;
+    const cand = t3PickNode(m.x, m.y);
+    if (cand && cand !== start) endNode = cand;
+    if (!endNode && moved){
+      const B = t3Cam();
+      const pos = t3HitViewPlane(m.x, m.y, B, start);
+      if (!pos) return;
+      endNode = addNode(pos.x, pos.y, false, { z: pos.z });
+      endNode.__new = true;
+    }
+    if (!endNode) return;
+    const ok = addBeam(start, endNode, currentMat);
+    if (ok){ pushHistory(); logEvent('build', { mat: currentMat }); }
+    else {
+      const orphan = nd => !nd.pinned && !beams.some(b => b.a===nd || b.b===nd);
+      if (endNode.__new && orphan(endNode)) nodes.splice(nodes.indexOf(endNode), 1);
+      if (beamErr !== 'span') setTip('该材料库存不足！');
+    }
+    return;
+  }
+  /* 空白处拖动：在桌面上生成一个新节点作为落脚点 */
+  if (moved){
+    const B = t3Cam();
+    const gp = t3HitGround(m.x, m.y, B);
+    if (!gp){ setTip('请向上拖动视角，让桌面出现在画面里，再在桌面上点下一个落点。'); return; }
+    if (Math.hypot(gp.x, gp.z) > T3CFG.tableR){ setTip('那已经超出桌面范围了，请在桌面以内落脚。'); return; }
+    const n = addNode(gp.x, 0, false, { z: gp.z });
+    pushHistory(); logEvent('build', { mat: 'base' });
+  }
+}
+
+/* ---------- 棉花糖与最高点 ---------- */
+function t3ApexNode(){
+  let best = null;
+  for (const n of nodes){
+    if (n.marsh) continue;
+    if (n.bucket) continue;
+    if (!best || n.y > best.y) best = n;
+  }
+  return best;
+}
+
+/* ---------- 开始测试（松手） ---------- */
+function t3BeginTest(){
+  const apex = t3ApexNode();
+  if (!apex || nodes.filter(n=>!n.marsh).length < 3){
+    setTip('先在桌面上用意面搭出塔身：至少三个落脚点 + 连接的构件。「测试」= 松手，看它能不能自己站住。');
+    return false;
+  }
+  T3.apex = apex;
+  t3SnapshotBuild();   // 记录松手前的姿态，方便退出测试后继续修改
+  /* 棉花糖 = 塔顶的一团「粘胶」：先找出塔顶附近的一圈节点（最高点下方 capBand 内、
+     水平 capRadius 内），等棉花糖放上去后，用它当"胶"把这一圈节点经由棉花糖刚性连住。 */
+  const capBand = T3CFG.capBand || 46;
+  const capRadius = T3CFG.capRadius || 90;
+  T3.capNodes = nodes.filter(n => !n.pinned && !n.bucket && !n.marsh &&
+    n.y >= apex.y - capBand &&
+    Math.hypot(n.x - apex.x, (n.z||0) - (apex.z||0)) <= capRadius);
+  if (!T3.capNodes.length) T3.capNodes = [apex];
+  T3.marsh = addNode(apex.x, apex.y + T3CFG.marshR, false, { z: apex.z || 0, marsh: true, mass: T3CFG.marshMass });
+  T3.cons = []; T3.sim = true; T3.frames = 0; T3.reason = '';
+
+  /* 质量：每根构件按 长度×线密度 分摊到两端；棉花糖是唯一的大质量 */
+  for (const n of nodes){
+    n.mass = n.marsh ? T3CFG.marshMass : T3CFG.nodeBaseMass;
+    n.inv = 0; n.vx = 0; n.vy = 0; n.vz = 0;
+  }
+  for (const bm of beams){
+    const m = MATERIALS[bm.mat]; if (!m) continue;
+    const w = t3len(bm.a, bm.b) * (m.density || 0.1) * T3CFG.densityK;
+    bm.a.mass += w/2; bm.b.mass += w/2;
+    bm.rest = t3len(bm.a, bm.b);
+    bm.buckled = false; bm.broken = false;
+    T3.cons.push({ a: bm.a, b: bm.b, rest: bm.rest, k: m.stiff || 0.5, bm, cable: !!m.cable, joint: false });
+  }
+  for (const n of nodes) if (!n.pinned) n.inv = 1 / Math.max(0.05, n.mass);
+
+  /* 上胶的节点 = 半刚接：把该节点入射构件两两远端用距离约束锁住（把铰接变成抗弯） */
+  for (const n of nodes){
+    if (!n.glued) continue;
+    const inc = beams.filter(bm => bm.a === n || bm.b === n);
+    const far = inc.map(bm => bm.a === n ? bm.b : bm.a);
+    const kj = (MATERIALS[n.glued] && MATERIALS[n.glued].angleK) ? MATERIALS[n.glued].angleK : 0.5;
+    for (let i = 0; i < far.length; i++)
+      for (let j = i+1; j < far.length; j++){
+        T3.cons.push({ a: far[i], b: far[j], rest: t3len(far[i], far[j]), k: 0.45 * kj, joint: true, owner: n });
+      }
+  }
+  /* 棉花糖像粘胶：与塔顶一圈节点各连一根短硬约束（保持放上去时的原距，不预加应力），
+     等于把塔顶的几根杆件「粘」在一起，同时把自身重量压在最顶上 —— 越高越窄越容易被它压塌。 */
+  const capList = (T3.capNodes && T3.capNodes.length) ? T3.capNodes : [apex];
+  for (const tn of capList){
+    T3.cons.push({ a: tn, b: T3.marsh, rest: t3len(tn, T3.marsh), k: 0.92, marsh: true });
+  }
+
+  /* 极微小的初始扰动：真实桌面不是理想对称的，不稳定平衡会被它触发 */
+  for (const n of nodes){
+    if (n.pinned) continue;
+    n.vx += (Math.random()-0.5) * T3CFG.noiseAmp;
+    n.vz += (Math.random()-0.5) * T3CFG.noiseAmp;
+  }
+  T3.startTop = T3.marsh.y + T3CFG.marshR;
+  T3.curTop = T3.startTop; T3.bestTop = T3.startTop;
+  t3FitView();
+  return true;
+}
+
+/* ---------- 三维 PBD ---------- */
+function t3Step(){
+  const list = nodes.filter(n => !n.pinned);
+  for (const n of list){
+    n.ox = n.x; n.oy = n.y; n.oz = n.z || 0;
+    n.vy -= T3CFG.gravity;
+    n.x += n.vx; n.y += n.vy; n.z = (n.z||0) + n.vz;
+  }
+  for (const c of T3.cons) c.acc = 0;
+  for (let it = 0; it < T3CFG.iter; it++){
+    for (const c of T3.cons){
+      if (c.dead || !c.a || !c.b) continue;
+      const wa = c.a.inv || 0, wb = c.b.inv || 0, ws = wa + wb;
+      if (ws === 0) continue;
+      let dx = c.b.x - c.a.x, dy = c.b.y - c.a.y, dz = (c.b.z||0) - (c.a.z||0);
+      const d = Math.hypot(dx, dy, dz); if (d < 1e-6) continue;
+      if (c.cable && d < c.rest + 0.4) continue;      // 绳索只受拉
+      const diff = ((d - c.rest) / d) * c.k;
+      c.a.x += dx*diff*(wa/ws); c.a.y += dy*diff*(wa/ws); c.a.z = (c.a.z||0) + dz*diff*(wa/ws);
+      c.b.x -= dx*diff*(wb/ws); c.b.y -= dy*diff*(wb/ws); c.b.z = (c.b.z||0) - dz*diff*(wb/ws);
+      /* 每帧累计"纠偏量" ≈ 该构件这一帧被压缩/拉伸的总趋势，正比于轴力，用它判欧拉屈曲 */
+      c.acc += (d - c.rest);
+    }
+    /* 桌面接触 + 摩擦（底面只能停留在桌面上，滑动受摩擦阻尼） */
+    for (const n of list){
+      if (n.y > 0) continue;
+      n.y = 0;
+      const fr = T3CFG.friction;
+      n.x += (n.ox - n.x) * fr; n.z += (n.oz - n.z) * fr;
+      n.vy = Math.max(0, n.vy);
+    }
+  }
+  for (const n of list){
+    n.vx = (n.x - n.ox) * T3CFG.damping;
+    n.vy = (n.y - n.oy) * T3CFG.damping;
+    n.vz = ((n.z||0) - n.oz) * T3CFG.damping;
+  }
+  T3.frames++;
+  t3CheckMembers();
+}
+
+/* 构件失效：拉断 / 受压屈曲（欧拉临界载荷 ∝ 1/L²） */
+function t3CheckMembers(){
+  for (const c of T3.cons){
+    if (!c.bm || c.dead) continue;
+    if (c.bm.broken){ c.dead = true; continue; }
+    const d = t3len(c.a, c.b);
+    const strain = (d - c.rest) / c.rest;
+    const mat = MATERIALS[c.bm.mat];
+    if (mat && strain > 0 && strain > (mat.breakStrain || 0.06)){ c.bm.broken = true; c.dead = true; continue; }
+    /* 受压屈曲：轴力（用每帧累计纠偏量作为代理）超过欧拉临界载荷 ∝ 1/L² 时构件压弯失效。
+       细长杆一压就弯 —— 所以加斜撑把长杆切成短杆，是最有效的加固手段（屈曲载荷随长度平方反比增长）。 */
+    if (T3CFG.enableBuckle && c.acc < 0){
+      const load = -c.acc;
+      const limit = T3CFG.buckleK / (c.rest * c.rest);
+      if (load > limit && !c.bm.buckled){ c.bm.buckled = true; c.k = T3CFG.buckleSoft; }
+    }
+  }
+  /* 有构件断了，依赖它的刚接约束失效 */
+  for (const c of T3.cons){
+    if (c.joint && c.owner){
+      const ok = beams.some(bm => !bm.broken && ((bm.a===c.a && bm.b===c.b) || (bm.a===c.b && bm.b===c.a)));
+      if (!ok) c.dead = true;
+    }
+  }
+}
+
+/* ---------- 判定：会不会倒下来 ---------- */
+function t3Judge(){
+  if (!T3.sim || !T3.marsh) return;
+  T3.curTop = Math.max(0, T3.marsh.y + T3CFG.marshR);
+  T3.bestTop = Math.max(T3.bestTop, T3.curTop);
+  const broke = beams.filter(b => b.broken).length;
+  const buckl = beams.filter(b => b.buckled).length;
+
+  /* 失败条件 1：棉花糖掉到桌面上 */
+  if (T3.marsh.y < T3CFG.marshR * 0.9){
+    T3.reason = '塔倒了 —— 棉花糖落到桌面。';
+    t3Finish(false); return;
+  }
+  /* 失败条件 2：塔顶大幅下沉（晃塌/坐塌） */
+  if (T3.startTop > 40 && T3.curTop < T3.startTop * 0.62){
+    T3.reason = '塔身塌了 —— 塔顶高度掉了超过三分之一。';
+    t3Finish(false); return;
+  }
+  /* 失败条件 3：构件断得太多 / 屈曲过多（集体失稳） */
+  if (beams.length && (broke / beams.length) > (currentLevel.pass && currentLevel.pass.maxBrokenRatio || 0.5)){
+    T3.reason = '断裂过多 —— 构件被拉断，结构已经不完整。';
+    t3Finish(false); return;
+  }
+  if (beams.length && (buckl / beams.length) > 0.45){
+    T3.reason = '失稳屈曲 —— 太多细长构件被压弯，整塔撑不住。';
+    t3Finish(false); return;
+  }
+  /* 失败条件 4：整体倾覆（顶点水平投影跑出底面支撑范围） */
+  const foot = nodes.filter(n => !n.marsh && n.y < 12);
+  if (foot.length){
+    let fx = 0, fz = 0; for (const n of foot){ fx += n.x; fz += n.z||0; }
+    fx /= foot.length; fz /= foot.length;
+    let rad = 0; for (const n of foot) rad = Math.max(rad, Math.hypot(n.x-fx, (n.z||0)-fz));
+    const drift = Math.hypot(T3.marsh.x - fx, (T3.marsh.z||0) - fz);
+    if (T3.curTop > 30 && drift > rad + 95){
+      T3.reason = '整塔倾覆 —— 重心偏出底面，向一侧倒下去。';
+      t3Finish(false); return;
+    }
+  }
+  /* 成功：只要塔不倒、独立站稳 holdFrames 帧就算过关。
+     棉花糖挑战记录的是「最高值」（桌面→棉花糖顶的高度），高度不再是过关门槛——
+     塔不倒就行，站得越高最高值越大，用于评分与排行榜。 */
+  if (T3.frames >= T3CFG.holdFrames){
+    T3.reason = '挑战成功：高塔独立站稳 ' + (T3CFG.holdFrames/60).toFixed(1) + ' 秒，棉花糖顶最高 ' + Math.round(T3.bestTop) + ' px。';
+    t3Finish(true); return;
+  }
+  if (T3.frames > T3CFG.maxFrames){ t3Finish(true); }
+}
+function t3Finish(ok){
+  T3.sim = false;
+  levelState = ok ? 'pass' : 'fail';
+  const target = currentLevel.targetHeight || 240;
+  const h = Math.round(T3.bestTop);
+  const txt = ok
+    ? '棉花糖高塔 · 挑战成功\n独立站稳 ' + (T3CFG.holdFrames/60).toFixed(1) + ' 秒　最高值 ' + h + ' px'
+    : '棉花糖高塔 · 失败\n' + T3.reason;
+  showResult(txt, ok, { h, bestTop: h, target });
+}
+
+/* ---------- 退出测试：清掉棉花糖，恢复建造姿态 ---------- */
+function t3ExitTest(){
+  T3.sim = false; T3.cons = []; T3.frames = 0;
+  if (T3.marsh){
+    const i = nodes.indexOf(T3.marsh);
+    if (i >= 0) nodes.splice(i, 1);
+    T3.marsh = null;
+  }
+  for (const bm of beams){ bm.broken = false; bm.buckled = false; }
+  /* 恢复建造时的坐标（如果有建筑态快照就还原，否则保持现状让用户继续改） */
+  for (const n of nodes){
+    if (n.bx !== undefined){ n.x = n.bx; }
+    if (n.by !== undefined){ n.y = n.by; }
+    if (n.bz !== undefined){ n.z = n.bz; }
+    n.vx = 0; n.vy = 0; n.vz = 0;
+  }
+}
+
+/* 记录建造态（用于测试后还原） */
+function t3SnapshotBuild(){
+  for (const n of nodes){ n.bx = n.x; n.by = n.y; n.bz = n.z || 0; }
+}
+
+/* ---------- 渲染 ---------- */
+function t3Render(){
+  const B = t3Cam();
+  ctx.save();
+  const g = ctx.createLinearGradient(0, 0, 0, T3.H);
+  g.addColorStop(0, '#f4f7fa'); g.addColorStop(1, '#e2e8ef');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, T3.W, T3.H);
+
+  t3DrawTable(B);
+  t3DrawDropLines(B);
+  t3DrawTargetRing(B);
+
+  /* 构件：按深度从远到近 */
+  const items = [];
+  for (const bm of beams){
+    const pa = t3Project(bm.a, B), pb = t3Project(bm.b, B);
+    if (!pa || !pb) continue;
+    const strain = bm.rest ? (t3len(bm.a, bm.b) - bm.rest) / bm.rest : 0;
+    items.push({ bm, pa, pb, d: (pa.z + pb.z)/2, strain });
+  }
+  items.sort((p, q) => q.d - p.d);
+  for (const it of items) t3DrawBeam(it, B);
+
+  /* 预览线（正在拖新构件） */
+  if (T3.preview && T3.dragFrom && mode === 'build' && currentTool === 'build' && !isJointMat(currentMat)){
+    const pa = t3Project(T3.dragFrom, B);
+    if (pa){
+      const endN = t3PickNode(T3.preview.x, T3.preview.y);
+      let pb = endN ? t3Project(endN, B) : null;
+      if (!pb){
+        const P = t3HitViewPlane(T3.preview.x, T3.preview.y, B, T3.dragFrom);
+        pb = P ? t3Project(P, B) : null;
+      }
+      if (pb){
+        ctx.save(); ctx.setLineDash([6, 5]);
+        ctx.strokeStyle = 'rgba(70,110,160,.55)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+
+  t3DrawNodes(B);
+  t3DrawMarsh(B);
+  t3DrawMeasure(B);
+  t3DrawHint(B);
+  ctx.restore();
+}
+
+function t3DrawTable(B){
+  const R = T3CFG.tableR, seg = 64;
+  const pts = [];
+  for (let i = 0; i <= seg; i++){
+    const a = i/seg * Math.PI*2;
+    const p = t3Project({ x: Math.cos(a)*R, y: 0, z: Math.sin(a)*R }, B);
+    pts.push(p);
+  }
+  ctx.save();
+  ctx.beginPath();
+  let started = false;
+  for (const p of pts){ if (!p) continue; if (!started){ ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y); }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(226,216,196,.85)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(120,105,80,.45)'; ctx.lineWidth = 2; ctx.stroke();
+  /* 桌面网格 */
+  ctx.save(); ctx.clip();
+  ctx.strokeStyle = 'rgba(120,105,80,.16)'; ctx.lineWidth = 1;
+  for (let v = -R; v <= R; v += 60){
+    const a1 = t3Project({ x:-R, y:0, z:v }, B), a2 = t3Project({ x:R, y:0, z:v }, B);
+    if (a1 && a2){ ctx.beginPath(); ctx.moveTo(a1.x, a1.y); ctx.lineTo(a2.x, a2.y); ctx.stroke(); }
+    const b1 = t3Project({ x:v, y:0, z:-R }, B), b2 = t3Project({ x:v, y:0, z:R }, B);
+    if (b1 && b2){ ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.stroke(); }
+  }
+  ctx.restore();
+  ctx.restore();
+}
+
+/* 每个节点在桌面上的投影点 + 细虚线：给出高度/深度的直观参照 */
+function t3DrawDropLines(B){
+  ctx.save();
+  ctx.strokeStyle = 'rgba(90,100,120,.22)'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+  for (const n of nodes){
+    if (n.marsh) continue;
+    if (n.y < 0.5) continue;
+    const p = t3Project(n, B), gp = t3Project({ x:n.x, y:0, z:n.z||0 }, B);
+    if (!p || !gp) continue;
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(gp.x, gp.y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(90,100,120,.30)';
+    ctx.beginPath(); ctx.arc(gp.x, gp.y, 2.2, 0, Math.PI*2); ctx.fill();
+    ctx.setLineDash([3, 4]);
+  }
+  ctx.restore();
+}
+
+function t3DrawTargetRing(B){
+  const target = currentLevel.targetHeight || 240;
+  const R = 150, seg = 48;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(200,80,80,.45)'; ctx.lineWidth = 1.6; ctx.setLineDash([7, 6]);
+  ctx.beginPath();
+  let started = false;
+  for (let i = 0; i <= seg; i++){
+    const a = i/seg * Math.PI*2;
+    const p = t3Project({ x: Math.cos(a)*R, y: target, z: Math.sin(a)*R }, B);
+    if (!p) continue;
+    if (!started){ ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
+  const lp = t3Project({ x:R, y:target, z:0 }, B);
+  if (lp){
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(200,80,80,.85)';
+    ctx.font = '600 12px system-ui, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('目标高度 ' + target + ' px', lp.x + 8, lp.y);
+  }
+  ctx.restore();
+}
+
+function t3DrawBeam(it, B){
+  const bm = it.bm;
+  const mat = MATERIALS[bm.mat] || { color:'#888', width:4, breakStrain:0.06 };
+  ctx.save();
+  let color = mat.color, width = mat.width || 4;
+  if (bm.broken){ color = 'rgba(180,60,60,.28)'; width = 2; }
+  else if (bm.buckled){ color = '#e08a3c'; width = Math.max(2, width*0.9); }
+  else {
+    const tR = Math.min(1, Math.abs(it.strain) / (mat.breakStrain || 0.06));
+    const light = 52 - tR * 26;
+    color = it.strain >= 0 ? `hsl(8, 78%, ${light}%)` : `hsl(212, 72%, ${light}%)`;
+  }
+  const depthScale = Math.max(0.55, Math.min(1.5, 900 / it.d));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1.6, width * depthScale * 0.75);
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(it.pa.x, it.pa.y); ctx.lineTo(it.pb.x, it.pb.y); ctx.stroke();
+  ctx.restore();
+}
+
+function t3DrawNodes(B){
+  const hovered = t3PickNode((typeof mouse !== 'undefined' && mouse.x) || -999, (typeof mouse !== 'undefined' && mouse.y) || -999);
+  for (const n of nodes){
+    if (n.marsh) continue;
+    const p = t3Project(n, B); if (!p) continue;
+    const s = Math.max(2.4, 5.2 * (900 / p.z));
+    ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI*2);
+    if (n.glued){ ctx.fillStyle = (MATERIALS[n.glued] && MATERIALS[n.glued].color) || '#f0c86e'; }
+    else ctx.fillStyle = n === hovered ? '#2f6fb0' : '#4c5a68';
+    ctx.fill();
+    if (n.glued){
+      ctx.strokeStyle = 'rgba(60,50,30,.55)'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s + 2.6, 0, Math.PI*2); ctx.stroke();
+    }
+    /* 节点的地上落脚点：贴桌面的画成小方座，提示它是支承点 */
+    if (n.y < 0.6){
+      ctx.fillStyle = 'rgba(110,90,60,.55)';
+      ctx.beginPath(); ctx.arc(p.x, p.y, s + 1.6, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  /* 悬停/起始节点高亮环 */
+  const hl = T3.dragFrom || hovered;
+  if (hl && mode === 'build'){
+    const p = t3Project(hl, B);
+    if (p){
+      ctx.save();
+      ctx.strokeStyle = isJointMat(currentMat) ? '#d08a2c' : '#2f6fb0';
+      ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+  }
+}
+
+function t3DrawMarsh(B){
+  const m = T3.sim ? T3.marsh : (T3.apex || t3ApexNode());
+  if (!m) return;
+  const topY = T3.sim ? m.y : (T3.apex ? T3.apex.y : m.y) + T3CFG.marshR;
+  const cx = T3.sim ? m.x : (T3.apex ? T3.apex.x : m.x);
+  const cz = T3.sim ? (m.z||0) : (T3.apex ? (T3.apex.z||0) : (m.z||0));
+  const p = t3Project({ x: cx, y: topY + T3CFG.marshR*0.2, z: cz }, B);
+  if (!p) return;
+  const r = Math.max(6, T3CFG.marshR * (1000 / p.z) * 0.55);
+  ctx.save();
+  ctx.globalAlpha = T3.sim ? 1 : 0.42;
+  ctx.fillStyle = '#fffaf6';
+  ctx.strokeStyle = '#f2b8c6'; ctx.lineWidth = 2;
+  const rw = r*1.5, rh = r;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(p.x - rw/2, p.y - rh/2, rw, rh, r*0.42);
+  else ctx.rect(p.x - rw/2, p.y - rh/2, rw, rh);
+  ctx.fill(); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+/* 左侧竖向量高标注：桌面 → 棉花糖顶 */
+function t3DrawMeasure(B){
+  const target = currentLevel.targetHeight || 240;
+  const h = T3.sim ? T3.curTop : ((t3ApexNode() ? t3ApexNode().y : 0) + T3CFG.marshR);
+  const ax = -(T3CFG.tableR * 0.62);
+  const a1 = t3Project({ x: ax, y: 0, z: 0 }, B);
+  const a2 = t3Project({ x: ax, y: Math.max(h, 12), z: 0 }, B);
+  const a3 = t3Project({ x: ax, y: target, z: 0 }, B);
+  if (!a1 || !a2) return;
+  ctx.save();
+  ctx.strokeStyle = '#3a4a5a'; ctx.fillStyle = '#3a4a5a'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(a1.x, a1.y); ctx.lineTo(a2.x, a2.y); ctx.stroke();
+  const arrow = (y, s) => { ctx.beginPath(); ctx.moveTo(a1.x, y); ctx.lineTo(a1.x-4, y+s); ctx.lineTo(a1.x+4, y+s); ctx.closePath(); ctx.fill(); };
+  arrow(a1.y, -6); arrow(a2.y, 6);
+  ctx.font = '600 13px system-ui, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillText(Math.round(h) + ' px', a1.x - 10, (a1.y + a2.y)/2);
+  if (a3){
+    ctx.strokeStyle = 'rgba(200,80,80,.7)'; ctx.setLineDash([5,4]); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(a1.x - 26, a3.y); ctx.lineTo(a1.x + 16, a3.y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(200,80,80,.9)'; ctx.font = '600 11px system-ui, sans-serif';
+    ctx.fillText('参考', a1.x - 30, a3.y);
+  }
+  ctx.restore();
+}
+
+function t3DrawHint(B){
+  const lines = [];
+  if (T3.sim){
+    const secs = (T3.frames / 60).toFixed(1);
+    const need = (T3CFG.holdFrames / 60).toFixed(1);
+    lines.push('松手了 —— 已站稳 ' + secs + ' s / ' + need + ' s　棉花糖顶 ' + Math.round(T3.curTop) + ' px');
+  } else {
+    const n = nodes.filter(x=>!x.marsh).length;
+    lines.push('拖动空白处旋转视角 · 拖动节点画构件 · 点节点上胶');
+    if (n < 3) lines.push('先在桌面上点出三个落脚点，再把它们连起来（三角形才不垮）');
+  }
+  ctx.save();
+  ctx.font = '12px system-ui, sans-serif'; ctx.textBaseline = 'top';
+  let y = 12;
+  for (const s of lines){ ctx.fillStyle = 'rgba(50,60,72,.72)'; ctx.fillText(s, 14, y); y += 17; }
+  ctx.restore();
+}
+
+/* ---------- HUD ---------- */
+function t3UpdateHUD(){
+  try {
+    const el = document.getElementById('hud');
+    if (!el) return;
+    const nCnt = nodes.filter(n=>!n.marsh).length;
+    const bCnt = beams.filter(b=>!b.broken).length;
+    const target = currentLevel.targetHeight || 240;
+    const h = T3.sim ? T3.curTop : ((t3ApexNode() ? t3ApexNode().y : 0) + T3CFG.marshR);
+    const buck = beams.filter(b=>b.buckled).length;
+    const rows = [
+      ['构件 / 节点', bCnt + ' / ' + nCnt],
+      ['棉花糖顶高', Math.round(h) + ' / ' + target + ' px'],
+      ['屈曲构件', buck + '（细长受压杆件会弯）'],
+    ];
+    if (T3.sim) rows.push(['已站稳', (T3.frames/60).toFixed(1) + ' / ' + (T3CFG.holdFrames/60).toFixed(1) + ' s']);
+    let html = '';
+    for (const [k, v] of rows) html += '<div class="hudRow"><span>' + k + '</span><b>' + v + '</b></div>';
+    el.innerHTML = html;
+  } catch(e){}
+}
+
+/* ---------- 三维模板与参考答案（都经过模拟验证必须站得住） ---------- */
+/* 生成一段「逐渐收窄、全三角化」的三棱塔：ring(下三角) → ring(上三角) → apex(顶点)。
+   每个侧面板都是一个四边形加一根对角线 → 两个三角形 → 刚而不塌。 */
+function t3TrussTower(opt){
+  const m = pickBeamMat();
+  if (!m){ setTip('当前没有可用的结构材料。'); return false; }
+  const R0 = opt.R0, R1 = opt.R1, y0 = 0, y1 = opt.y1, apexY = opt.apexY;
+  const rot0 = 0.5;
+  const ang = k => rot0 + k * Math.PI*2/3;
+  const lower = [0,1,2].map(k => addNode(Math.cos(ang(k))*R0, y0, false, { z: Math.sin(ang(k))*R0 }));
+  const upper = [0,1,2].map(k => addNode(Math.cos(ang(k)+0.52)*R1, y1, false, { z: Math.sin(ang(k)+0.52)*R1 }));
+  const apex  = addNode(0, apexY, false, { z: 0 });
+  const link = (a, b) => { if (!addBeam(a, b, m)) { /* 库存不足：忽略即可 */ } };
+  /* 下三角 + 上三角（水平环） */
+  for (let k = 0; k < 3; k++){ link(lower[k], lower[(k+1)%3]); link(upper[k], upper[(k+1)%3]); }
+  /* 立杆 + 每个侧面板一根对角线（把四边形切成两个三角形） */
+  for (let k = 0; k < 3; k++){
+    link(lower[k], upper[k]);
+    link(lower[k], upper[(k+1)%3]);
+    if (opt.extraDiag) link(lower[(k+1)%3], upper[k]);
+  }
+  /* 顶点收口：和上三角构成四面体 */
+  for (let k = 0; k < 3; k++) link(upper[k], apex);
+  return true;
+}
+
+/* 起步模板：矮而稳的一段塔，低于目标高度，留出学生往上加的空间 */
+function t3Template(){
+  pushHistory();
+  t3ResetField();
+  const ok = t3TrussTower({ R0: 105, R1: 65, y1: 130, apexY: 205, extraDiag: true });
+  if (!ok){ setTip('当前没有可用的结构材料。'); return; }
+  t3SnapshotBuild();
+  t3FitView();
+  setTip('起步塔已就位（约 220px，仍低于 240px 目标）：拖动空白处转视角看看它的三棱形体，再往上加高、往上收窄，并把交叉斜撑加密。');
+}
+
+/* 参考答案：加高一档并补满双向斜撑（教师面板「载入参考答案」） */
+function t3Solution(){
+  t3ResetField();
+  const ok = t3TrussTower({ R0: 115, R1: 70, y1: 130, apexY: 252, extraDiag: true });
+  glueAllJoints();
+  if (!ok){ setTip('当前没有可用的结构材料。'); return; }
+  t3SnapshotBuild();
+  t3FitView();
+  setTip('参考答案：三角化三棱塔（约 252px，超过 240px 目标）。要点：底面三个支点撑开成宽基座；每一层都是三角形；越往上越收窄以减少顶部质量带来的倾覆；交叉斜撑把长杆切成短杆，避免受压屈曲。');
+}
+
+/* 清空场地（模板/参考答案用）。保留 pushHistory 以便撤销。 */
+function t3ResetField(){
+  const keep = [];
+  nodes = keep; beams = []; nextId = 0;
+  /* 清空场地 = 材料全退回，保证反复点模板结果一致（否则库存被耗尽，第二次只剩半座塔） */
+  stock = currentLevel.free ? {} : clone(currentLevel.stock);
+  refreshMaterialBar();
+  T3.marsh = null; T3.apex = null; T3.cons = []; T3.sim = false; T3.frames = 0;
+  T3.reason = '';
+}
+/* TOWER3D_END */
+
+/* ===================== 输入 ===================== */
+function getMouse(e){
+  const r = canvas.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  return { x: t.clientX - r.left, y: t.clientY - r.top };
+}
+
+canvas.addEventListener('mousedown', onDown);
+canvas.addEventListener('mousemove', onMove);
+window.addEventListener('mouseup', onUp);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); onDown(e); }, {passive:false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); onMove(e); }, {passive:false});
+window.addEventListener('touchend', e => { onUp(e); });
+
+function onDown(e){
+  const m = getMouse(e);
+  if (t3Active()){ t3OnDown(m); return; }
+  if (mode === 'test'){ applyImpulse(m.x, m.y, 70, 14); return; }
+  mouse.down = true; mouse.x = m.x; mouse.y = m.y;
+  dragStart = { node: findNodeNear(m.x, m.y), x: m.x, y: m.y };
+}
+
+function onMove(e){
+  const m = getMouse(e); mouse.x = m.x; mouse.y = m.y;
+  if (t3Active()){ t3OnMove(m); return; }
+  if (mode === 'build' && currentTool === 'build' && mouse.down && dragStart) previewEnd = { x:m.x, y:m.y };
+}
+
+function onUp(e){
+  if (t3Active()){ t3OnUp(getMouse(e)); return; }
+  if (mode !== 'build'){ mouse.down = false; return; }
+  /* 鼠标按下可能从未发生（例如点击了上层覆盖弹窗里的按钮，这里依然会收到 mouseup），
+     此时 dragStart 仍为 null，直接退出即可，避免拖拽距离计算崩溃。 */
+  if (!dragStart){ mouse.down = false; return; }
+  const rect = canvas.getBoundingClientRect();
+  const t = e.changedTouches ? e.changedTouches[0] : null;
+  const m = t ? { x:t.clientX - rect.left, y:t.clientY - rect.top } : mouse;
+  const moved = dist(dragStart.x, dragStart.y, m.x, m.y) > CFG.CLICK_EPS;
+
+  if (currentTool === 'erase'){
+    if (dragStart.node) { deleteNode(dragStart.node); pushHistory(); logEvent('del'); }
+    else {
+      const bm = findBeamNear(m.x, m.y);
+      if (bm) { deleteBeam(bm); pushHistory(); logEvent('del'); }
+    }
+    dragStart = null; previewEnd = null; mouse.down = false; return;
+  }
+
+  /* 胶合材料（胶带/粘胶）：不画梁——点击构件的交汇节点即可上胶；拖拽画线无效 */
+  if (isJointMat(currentMat)){
+    if (!moved){
+      if (dragStart.node && !dragStart.node.pinned) toggleGlue(dragStart.node);
+      else if (dragStart.node && dragStart.node.pinned) setTip('锚点是固定支座，不需要上胶。');
+      else setTip('把胶点到「两根以上构件交汇」的节点上：先搭好构件，再选' + MATERIALS[currentMat].name + '点击交汇处。');
+    } else {
+      setTip('胶带/粘胶不用画线——选中后「点击」两根以上构件交汇的节点即可上胶，把连接变成抗弯的刚接。');
+    }
+    dragStart = null; previewEnd = null; mouse.down = false; return;
+  }
+
+  if (moved){
+    let startNode = dragStart.node; let startNodeNew = false;
+    if (!startNode){ startNode = addNode(dragStart.x, dragStart.y); startNodeNew = true; }
+    let endNode = findNodeNear(m.x, m.y, startNode); let endNodeNew = false;
+    if (!endNode && dist(startNode.x, startNode.y, m.x, m.y) > CFG.CLICK_EPS){
+      endNode = addNode(m.x, m.y); endNodeNew = true;
+    }
+    if (endNode && endNode !== startNode){
+      const ok = addBeam(startNode, endNode, currentMat);
+      if (ok){ pushHistory(); logEvent('build', { mat: currentMat }); }
+      else {
+        const isOrphan = nd => !nd.pinned && !beams.some(b => b.a===nd || b.b===nd);
+        if (endNodeNew && isOrphan(endNode)) nodes.splice(nodes.indexOf(endNode), 1);
+        if (startNodeNew && isOrphan(startNode)) nodes.splice(nodes.indexOf(startNode), 1);
+        if (beamErr !== 'span') setTip('该材料库存不足！');
+      }
+    }
+  } else if (dragStart.node){
+    if (currentLevel && (currentLevel.free || currentLevel.type === 'sandbox')){
+      if (!dragStart.node.bucket) { dragStart.node.pinned = !dragStart.node.pinned; pushHistory(); logEvent('pin'); }
+    } else {
+      setTip('挑战关卡中支座位置由关卡预设，不能在空中随意添加固定点。');
+    }
+  }
+  dragStart = null; previewEnd = null; mouse.down = false;
+}
+
+/* ===================== UI 绑定 ===================== */
+function materialAvailable(k){
+  return currentLevel ? (currentLevel.free || stock[k] > 0) : true;
+}
+
+function refreshMaterialBar(){
+  const free = currentLevel && currentLevel.free;
+  let activeHidden = false;
+  document.querySelectorAll('#matGroup .mat').forEach(btn => {
+    const k = btn.dataset.mat;
+    const av = materialAvailable(k);
+    btn.style.display = av ? '' : 'none';
+    const c = btn.querySelector('.cnt');
+    if (c) c.textContent = free ? '∞' : (stock[k] ?? 0);
+    if (!av && btn.classList.contains('active')) activeHidden = true;
+  });
+  if (activeHidden || !materialAvailable(currentMat)){
+    currentMat = Object.keys(MATERIALS).find(k => materialAvailable(k)) || Object.keys(MATERIALS)[0];
+    document.querySelectorAll('#matGroup .mat').forEach(btn => btn.classList.toggle('active', btn.dataset.mat === currentMat));
+    setTip(`本关可用材料：${Object.keys(MATERIALS).filter(k => materialAvailable(k)).map(k => MATERIALS[k].name).join('、')}`);
+  }
+}
+
+const MATSHORT = { paper:'纸', wood:'木梁', steel:'钢梁', cable:'钢索', stick:'意面', tape:'胶带', glue:'粘胶', string:'细绳' };
+function renderMaterialButtons(){
+  const g = document.getElementById('matGroup');
+  g.innerHTML = '';
+  const free = !!(currentLevel && currentLevel.free);
+  for (const [key, m] of Object.entries(MATERIALS)){
+    const btn = document.createElement('button');
+    btn.className = 'mat' + (key === currentMat ? ' active' : '');
+    btn.dataset.mat = key;
+    const cnt = free ? '∞' : (stock[key] ?? 0);
+    btn.title = isJointMat(key)
+      ? `${m.name}：节点胶合材料——选中后点击「两根以上构件交汇」的节点，把连接从铰接变成刚接（点击节点使用，不画线）`
+      : `${m.name}（刚度 ${m.stiff} · 断裂 ${m.breakStrain}）`;
+    btn.innerHTML = `<span class="swatch" style="background:${m.color}"></span><span class="nm">${MATSHORT[key] || m.name}</span><span class="cnt">${cnt}</span>`;
+    btn.onclick = () => {
+      currentMat = key;
+      document.querySelectorAll('#matGroup .mat').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    g.appendChild(btn);
+  }
+  refreshMaterialBar();
+}
+
+function updateLevelUI(){ document.getElementById('levelName').textContent = currentLevel.desc; }
+function populateLevelSelect(){
+  const sel = document.getElementById('levelSelect');
+  sel.innerHTML = '';
+  LEVELS.forEach((lv, i) => { const opt = document.createElement('option'); opt.value = i; opt.textContent = lv.name; sel.appendChild(opt); });
+  const customOpt = document.createElement('option'); customOpt.value = -1; customOpt.textContent = '自定义关卡'; sel.appendChild(customOpt);
+  const freeOpt = document.createElement('option'); freeOpt.value = -2; freeOpt.textContent = '自由建造实验室'; sel.appendChild(freeOpt);
+  sel.value = currentLevelIndex;
+}
+
+document.getElementById('levelSelect').onchange = (e) => {
+  const idx = +e.target.value;
+  if (idx === -1 && !customLevel && currentLevelIndex !== -2){ customLevel = clone(currentLevel); customLevel.name = '自定义关卡'; }
+  loadLevel(idx);
+};
+
+document.getElementById('btnBuild').onclick = () => { if (mode === 'test') enterBuild(); setModeUI('build'); };
+document.getElementById('btnTest').onclick = () => { if (mode === 'build' && enterTest()) setModeUI('test'); };
+function setModeUI(m){
+  mode = m;
+  document.body.classList.toggle('in-test', m === 'test');
+  document.getElementById('btnBuild').classList.toggle('active', m==='build');
+  document.getElementById('btnTest').classList.toggle('active', m==='test');
+  document.getElementById('btnBuild').classList.toggle('primary', m==='test');
+  document.getElementById('btnTest').classList.toggle('primary', m==='build');
+  document.getElementById('btnQuake').disabled = m==='build';
+}
+
+document.getElementById('btnQuake').onclick = () => { earthquake = !earthquake; document.getElementById('btnQuake').classList.toggle('active', earthquake); };
+
+document.getElementById('btnToolBuild').onclick = () => setTool('build');
+document.getElementById('btnToolErase').onclick = () => setTool('erase');
+function setTool(t){
+  currentTool = t;
+  document.getElementById('btnToolBuild').classList.toggle('active', t==='build');
+  document.getElementById('btnToolErase').classList.toggle('active', t==='erase');
+  setTip(t==='build' ? '建造工具：拖动连梁，点击节点切换锚点。' : '橡皮擦：点击节点或梁删除并返还材料。');
+}
+
+document.getElementById('btnUndo').onclick = undo;
+document.getElementById('btnRedo').onclick = redo;
+document.getElementById('btnReset').onclick = () => { if (mode==='test'){ enterBuild(); setModeUI('build'); } };
+document.getElementById('btnClear').onclick = () => {
+  pushHistory(); nodes = []; beams = []; payload = null;
+  stock = currentLevel.free ? {} : clone(currentLevel.stock);
+  stock0 = currentLevel.free ? {} : clone(currentLevel.stock);
+  for (const a of currentLevel.anchors) addNode(a.x * W, groundY + a.y, true);
+  spawnBuckets();
+  levelState = 'building'; gust = 0; sideScore = 1; hideResult();
+  refreshMaterialBar();
+};
+
+document.getElementById('btnTempDeck').onclick = () => { templateDeck(); logEvent('template', { kind: '桥面模板' }); afterTemplate('桥面'); };
+document.getElementById('btnTempTruss').onclick = () => { templateTruss(); logEvent('template', { kind: '桁架模板' }); afterTemplate('桁架'); };
+document.getElementById('btnTempCable').onclick = () => { templateCable(); logEvent('template', { kind: '悬索模板' }); afterTemplate('悬索桥'); };
+document.getElementById('btnTempTower').onclick = () => {
+  if (t3Active()){ t3Template(); logEvent('template', { kind: '三维塔模板' }); return; }
+  templateTower(); logEvent('template', { kind: '塔模板' }); afterTemplate('塔');
+};
+document.getElementById('btnTempCant').onclick = () => { templateCantilever(); logEvent('template', { kind: '悬臂模板' }); afterTemplate('悬臂'); };
+
+function afterTemplate(kind){
+  const jointKeys = Object.keys(MATERIALS).filter(k => isJointMat(k) && materialAvailable(k));
+  if (jointKeys.length && nodes.some(n => !n.pinned && !n.glued)){
+    setTip(kind + '骨架已搭好——接下来选' + jointKeys.map(k => MATERIALS[k].name).join(' / ') + '，点击各「交汇节点」上胶，否则测试时结构会转动散架。已胶合节点有彩色圆环。');
+  }
+}
+
+/* ===================== 教师参考答案（右上角教师设置 → 载入参考答案） ===================== */
+function glueAllJoints(){
+  // 节点按建造顺序(根→远端)遍历;胶合材料按 angleK 从高到低优先使用——
+  // 悬臂/塔等受弯矩大的根部先用粘胶锁死,远端再用胶带(教学:刚接刚度决定抗弯)
+  const jointKeys = Object.keys(MATERIALS).filter(k => isJointMat(k)).sort((a, b) => (MATERIALS[b].angleK || 0) - (MATERIALS[a].angleK || 0));
+  if (!jointKeys.length) return 0;
+  let used = 0;
+  for (const n of nodes){
+    if (n.pinned || n.bucket || n.glued) continue;
+    if (glueDegree(n) < 2) continue;
+    const jk = currentLevel.free ? jointKeys[0] : jointKeys.find(k => stock[k] > 0);
+    if (!jk) break;
+    n.glued = jk;
+    if (!currentLevel.free) stock[jk]--;
+    used++;
+  }
+  return used;
+}
+
+const SOLUTION_NOTE = {
+  bridge: '参考答案：4 段三角形桁架横跨两岸（上弦在锚点高度），汇交节点全部用胶带胶合。砝码落在跨中上弦节点，桁架把力分摊到两岸。比单根直梁可靠得多——三角形 + 节点胶合就是桁架桥的核心。',
+  tower: '参考答案（三维）：三角化三棱塔——底面三个支点撑开成宽基座，往上收窄一层，顶部收到一个顶点托住棉花糖；每个侧面板都加双向斜撑，把四边形切成三角形。实测：独立站稳 5 秒、棉花糖顶最高约 282px（参考线 240px——不倒即过关，系统记录最高值）。要点：①三角形才不会变成可折叠的机构；②底座越宽越抗倾覆；③交叉斜撑把长杆切成短杆，屈曲承载力随长度平方反比提升——细长杆一压就弯。',
+  floating: '参考答案：三只浮桶各立一根立柱，柱顶用木棍连成连续桥面，并用斜撑把桥面与相邻桶固结。砝码落在中桶上方由浮力托住。桶顶立柱与桥面的胶合让桥面不散。',
+  cantilever: '参考答案：从左侧高台的夹持端（上下两个固定点像桌沿夹住木条）向右挑出桁架：上弦沿上锚高度、下弦沿下锚高度，每节交叉斜撑、端部竖杆封口，所有节点上胶。像塔吊一样，从端部用钢索向下悬挂砝码，并加一根斜拉索（string）连回下锚点形成后拉索——它能拉住悬臂端部、显著减小挠度。根部优先用粘胶（angleK 高）锁死，远端用胶带。悬臂结构的关键：固定端两点夹持 + 节点刚接 + 三角形 + 拉索抗弯。'
+};
+
+function buildSolution(){
+  const L = currentLevel;
+  const type = L.type;
+  if (type === 'sandbox') return false;
+  if (type === 'bridge'){ templateTruss(); return true; }
+  if (type === 'cantilever'){ templateCantilever(); return true; }
+  if (type === 'tower'){ t3Solution(); return true; }   // 三维：三角化三棱塔（见 TOWER3D 模块）
+  if (type === 'floating'){
+    // 浮桶已在 loadSolution 中 spawn
+    if (buckets.length < 3) return false;
+    const m = pickBeamMat(); if (!m) return false;
+    const deckY = buckets[0].node.y - 24;
+    const cols = buckets.map(b => addNode(b.node.x, deckY));
+    // 每桶一根立柱
+    for (let i = 0; i < buckets.length; i++){
+      if (!addBeam(buckets[i].node, cols[i], m)) return false;
+    }
+    // 柱顶桥面 + 桶间斜撑（三角化）
+    for (let i = 0; i < cols.length - 1; i++){
+      if (!addBeam(cols[i], cols[i+1], m)) return false;
+      if (!addBeam(cols[i], buckets[i+1].node, m)) return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+function loadSolution(){
+  if (!currentLevel || currentLevel.type === 'sandbox'){
+    setTip('自由建造实验室没有参考答案——它是开放沙盒。');
+    return;
+  }
+  if (!confirm('载入参考答案会覆盖当前画布（仅教师操作，学生端看不到此按钮）。此操作会清空学生已搭的设计！\n继续载入吗？')) return;
+  // 清空并按关卡初始库存重建
+  nodes = []; beams = []; buckets = []; nextId = 0; payload = null;
+  stock = clone(currentLevel.stock);
+  stock0 = clone(currentLevel.stock);
+  levelState = 'building'; gust = 0; sideScore = 1; payloadStall = 0;
+  for (const a of currentLevel.anchors) addNode(a.x * W, groundY + a.y, true);
+  spawnBuckets();
+  const ok = buildSolution();
+  if (!ok){
+    loadLevel(currentLevelIndex);
+    setTip('参考答案构建失败（材料不足？），已还原为空白。');
+    return;
+  }
+  const used = glueAllJoints();
+  hideResult();
+  if (mode === 'test'){ enterBuild(); }  // 若在测试模式载入，先复位建造姿态，避免物理循环继续跑
+  setModeUI('build');
+  pushHistory();
+  history = history.slice(-1); historyIndex = 0; updateUndoUI();
+  refreshMaterialBar();
+  logEvent('solution', { type: currentLevel.type, glued: used });
+  setTip('已载入参考答案（已自动为 ' + used + ' 个节点上胶）。可直接点「测试」观察它如何过关，或在此基础上继续修改。' + (SOLUTION_NOTE[currentLevel.type] || ''));
+}
+
+/* ===================== 教师面板 ===================== */
+const teacherPanel = document.getElementById('teacherPanel');
+function openTeacher(){ syncTeacherInputs(); teacherPanel.classList.add('open'); }
+function closeTeacher(){ teacherPanel.classList.remove('open'); }
+document.getElementById('btnTeacher').onclick = openTeacher;
+document.getElementById('btnSolution').onclick = loadSolution;
+document.getElementById('tClose').onclick = closeTeacher;
+// 教师面板打开时，点击面板以外的任意区域即可退出教师模式（不必只能点“关闭”）
+document.addEventListener('click', (e) => {
+  if (!teacherPanel.classList.contains('open')) return;
+  if (teacherPanel.contains(e.target)) return;
+  const tb = document.getElementById('btnTeacher');
+  if (e.target === tb || tb.contains(e.target)) return;
+  closeTeacher();
+});
+
+document.querySelectorAll('.tabBtn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tabBtn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active'); document.getElementById(btn.dataset.tab).classList.add('active');
+  };
+});
+
+function renderTeacherStock(){
+  const g = document.getElementById('tStockGrid'); g.innerHTML = '';
+  for (const [k, m] of Object.entries(MATERIALS)){
+    const d = document.createElement('div');
+    d.innerHTML = `<label>${m.name}</label><input type="number" min="0" class="tStock" data-mat="${k}" value="${currentLevel.stock[k] || 0}">`;
+    g.appendChild(d);
+  }
+}
+
+function renderTeacherMats(){
+  const c = document.getElementById('tMatsContainer'); c.innerHTML = '';
+  for (const [k, m] of Object.entries(MATERIALS)){
+    const d = document.createElement('div');
+    d.style.border = '1px solid var(--line)'; d.style.borderRadius = '8px'; d.style.padding = '10px';
+    d.innerHTML = `
+      <h4 style="margin:0 0 8px;font-size:13px">${m.name} <span class="swatch" style="background:${m.color}"></span></h4>
+      <label>刚度 stiff</label><input type="number" step="0.01" min="0" max="1" class="tm-stiff" data-mat="${k}" value="${m.stiff}">
+      <label>断裂应变</label><input type="number" step="0.01" min="0.01" class="tm-break" data-mat="${k}" value="${m.breakStrain}">
+      <label>线密度</label><input type="number" step="0.01" min="0" class="tm-density" data-mat="${k}" value="${m.density}">
+      <label>最大跨度(px)</label><input type="number" step="10" min="20" class="tm-maxSpan" data-mat="${k}" value="${m.maxSpan ?? ''}">
+      <label>显示粗细</label><input type="number" step="1" min="1" class="tm-width" data-mat="${k}" value="${m.width}">
+      <label><input type="checkbox" class="tm-cable" data-mat="${k}" ${m.cable?'checked':''}> 只能受拉</label>
+      <div class="small">${m.notes || ''}</div>
+    `;
+    c.appendChild(d);
+  }
+}
+
+function syncScoreInputs(){
+  const C = scoreCfg();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = String(Math.round(v)); };
+  set('twSafety', C.wSafety);
+  set('twStiff', C.wStiff);
+  set('twEcon', C.wEcon);
+  set('twForm', C.wForm);
+  set('twFunc', C.wFunc);
+}
+
+function syncTeacherInputs(){
+  const lv = currentLevel;
+  document.getElementById('tName').value = lv.name;
+  document.getElementById('tType').value = lv.type;
+  const dSel = document.getElementById('tDifficulty');
+  if (dSel) dSel.value = difficultyKey || 'standard';
+  const anchors = lv.anchors || [];
+  document.getElementById('tAx').value = anchors[0] ? Math.round(anchors[0].x * 100) : 25;
+  document.getElementById('tBx').value = anchors[1] ? Math.round(anchors[1].x * 100) : 75;
+  document.getElementById('tAy').value = anchors[0] ? anchors[0].y : -220;
+  document.getElementById('tMass').value = lv.payload.mass;
+  document.getElementById('tDelay').value = lv.payload.delay;
+  document.getElementById('tHold').value = lv.payload.holdFrames;
+  document.getElementById('tBroken').value = Math.round(lv.pass.maxBrokenRatio * 100);
+  document.getElementById('tHeight').value = lv.targetHeight || 300;
+  document.getElementById('tHeightWrap').style.display = lv.type === 'tower' ? 'block' : 'none';
+  renderTeacherStock();
+  document.getElementById('tJson').value = JSON.stringify(CONFIG, null, 2);
+  syncScoreInputs();
+}
+
+document.getElementById('tType').onchange = (e) => {
+  document.getElementById('tHeightWrap').style.display = e.target.value === 'tower' ? 'block' : 'none';
+};
+
+document.getElementById('tApply').onclick = () => {
+  // 难度分档：保存到本地，下次打开仍生效；应用关卡会清空当前画布（教师操作）
+  const dSel = document.getElementById('tDifficulty');
+  if (dSel){
+    difficultyKey = dSel.value || 'standard';
+    try { localStorage.setItem('sg_difficulty', difficultyKey); } catch(e){}
+  }
+  const type = document.getElementById('tType').value;
+  const stock = {};
+  document.querySelectorAll('.tStock').forEach(inp => stock[inp.dataset.mat] = +inp.value || 0);
+  const anchors = [];
+  const ax = (+document.getElementById('tAx').value || 25)/100;
+  const bx = (+document.getElementById('tBx').value || 75)/100;
+  const ay = +document.getElementById('tAy').value || -220;
+  if (type === 'cantilever'){
+    anchors.push({ x: ax, y: ay }, { x: ax, y: ay - 90 });
+  } else if (type === 'tower'){
+    // 棉花糖塔独立站立，不设固定锚点
+  } else {
+    anchors.push({ x: ax, y: ay });
+    anchors.push({ x: bx, y: ay });
+  }
+  const newLevel = {
+    name: document.getElementById('tName').value || '自定义关卡',
+    type,
+    desc: '',
+    stock,
+    anchors,
+    payload: {
+      x: type === 'cantilever' ? Math.min(0.85, ax + 0.25) : 0.5,
+      y: type === 'cantilever' ? -999 : -420,
+      mass: +document.getElementById('tMass').value || (type === 'cantilever' ? 3 : 5),
+      delay: +document.getElementById('tDelay').value || (type === 'cantilever' ? 0 : 60),
+      radius: 14 + (+document.getElementById('tMass').value || 5)*0.9,
+      holdFrames: +document.getElementById('tHold').value || (type === 'cantilever' ? 220 : 180),
+      cableLen: type === 'cantilever' ? 12 : 90
+    },
+    pass: {
+      maxBrokenRatio: (+document.getElementById('tBroken').value || 40) / 100,
+      payloadGround: false,
+      maxSink: 45
+    }
+  };
+  if (type === 'tower') newLevel.targetHeight = +document.getElementById('tHeight').value || 300;
+  if (type === 'floating'){
+    newLevel.anchors = [];
+    newLevel.buckets = [{x:0.25,y:0},{x:0.5,y:0},{x:0.75,y:0}];
+    newLevel.waterY = -10;
+    newLevel.payload.y = -300;
+  }
+  customLevel = makeLevel(newLevel);
+  currentLevelIndex = -1;
+  populateLevelSelect();
+  document.getElementById('levelSelect').value = -1;
+  loadLevel(-1);
+  document.getElementById('tJson').value = JSON.stringify(CONFIG, null, 2);
+};
+
+document.getElementById('tSaveMats').onclick = () => {
+  document.querySelectorAll('.tm-stiff').forEach(inp => CONFIG.materials[inp.dataset.mat].stiff = +inp.value);
+  document.querySelectorAll('.tm-break').forEach(inp => CONFIG.materials[inp.dataset.mat].breakStrain = +inp.value);
+  document.querySelectorAll('.tm-density').forEach(inp => CONFIG.materials[inp.dataset.mat].density = +inp.value);
+  document.querySelectorAll('.tm-maxSpan').forEach(inp => {
+    const v = +inp.value;
+    if (isFinite(v) && v > 0) CONFIG.materials[inp.dataset.mat].maxSpan = v;
+    else delete CONFIG.materials[inp.dataset.mat].maxSpan;
+  });
+  document.querySelectorAll('.tm-width').forEach(inp => CONFIG.materials[inp.dataset.mat].width = +inp.value);
+  document.querySelectorAll('.tm-cable').forEach(inp => CONFIG.materials[inp.dataset.mat].cable = inp.checked);
+  processConfig();
+  renderMaterialButtons();
+  document.getElementById('tJson').value = JSON.stringify(CONFIG, null, 2);
+  setTip('材料参数已更新并写入配置文档。');
+};
+
+document.getElementById('tSaveScore').onclick = () => {
+  if (!CONFIG.score) CONFIG.score = {};
+  const g = (id) => +document.getElementById(id).value || 0;
+  CONFIG.score.wSafety = g('twSafety');
+  CONFIG.score.wStiff  = g('twStiff');
+  CONFIG.score.wEcon   = g('twEcon');
+  CONFIG.score.wForm   = g('twForm');
+  CONFIG.score.wFunc   = g('twFunc');
+  document.getElementById('tJson').value = JSON.stringify(CONFIG, null, 2);
+  setTip('评分权重已更新并写入配置文档。');
+};
+
+document.getElementById('tExport').onclick = () => {
+  document.getElementById('tJson').value = JSON.stringify(CONFIG, null, 2);
+  setTip('配置 JSON 已生成。');
+};
+
+document.getElementById('tImport').onclick = () => {
+  try {
+    CONFIG = JSON.parse(document.getElementById('tJson').value);
+    processConfig();
+    currentLevelIndex = 0;
+    loadLevel(0);
+    setTip('配置已导入。');
+  } catch (err){ alert('JSON 格式错误：' + err.message); }
+};
+
+document.getElementById('tDownload').onclick = () => {
+  const blob = new Blob([JSON.stringify(CONFIG, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'materials.json'; a.click();
+  URL.revokeObjectURL(url);
+  setTip('已下载 materials.json，可替换项目中的同名文件永久保存。');
+};
+
+/* ===================== 主循环 ===================== */
+function resize(){
+  dpr = window.devicePixelRatio || 1;
+  const r = canvas.getBoundingClientRect();
+  W = r.width; H = r.height;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  groundY = H - 70;
+  if (t3Active()) t3SetViewport();
+}
+window.addEventListener('resize', () => { resize(); });
+
+function loop(){
+  if (mode === 'test'){
+    /* 棉花糖高塔走自己的三维物理与判定：松手后能不能站起来 */
+    if (t3Active()){
+      if (T3.sim){ t3Step(); t3Judge(); }
+    } else {
+      physicsStep();
+    }
+    for (const im of impulses){ im.r += 9; im.life -= 0.04; }
+    impulses = impulses.filter(im => im.life > 0 && im.r < im.max);
+  }
+  render();
+  updateScoreHud();
+  requestAnimationFrame(loop);
+}
+
+/* ===================== 启动 ===================== */
+loadConfig().then(() => {
+  populateLevelSelect();
+  resize();
+  loadLevel(0);
+  openEntry();   // 进入项目先登记姓名 + 班级（预填测试默认值）
+  loop();
+});
+</script>
+</body>
+</html>

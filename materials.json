@@ -1,0 +1,201 @@
+{
+  "_readme": "课堂结构挑战 · 材料与物理参数配置\n教师可在右上角「教师设置」里直接修改参数并导出保存。\n所有数值均按真实材料相对性质缩放，适合课堂演示，非工程精确值。",
+  "units": {
+    "stiff": "刚度系数 0~1：越大越不容易被拉长/压短（对应真实杨氏模量 E 的相对大小）",
+    "breakStrain": "断裂应变：长度变化超过原长的这个比例时断裂（真实材料约为 极限应变 × 100%）",
+    "density": "线密度：每像素长度的质量，用于计算自重",
+    "maxSpan": "材料最大跨度(px)：单根构件跨不过的距离（纸/意面更短，钢/木更长）",
+    "cable": "true 表示只能受拉、不能受压（如绳索）",
+    "kind": "joint = 节点胶合材料：不能画梁，选中后点节点使用，把交汇的构件粘固（铰接→刚接）",
+    "angleK": "胶合刚度 0~1：越大节点抗转动越强（胶带偏软、热熔胶偏硬）",
+    "width": "屏幕上显示的像素粗细",
+    "notes": "真实依据与课堂建议"
+  },
+  "physics": {
+    "GRAVITY": { "value": 0.32, "note": "重力加速度缩放值" },
+    "DAMPING": { "value": 0.99, "note": "速度阻尼，模拟能量耗散" },
+    "ITER": { "value": 8, "note": "每帧约束迭代次数，越大结构越硬但越耗性能" },
+    "LATERAL": { "value": 0.12, "note": "塔类侧向失稳强度（模拟棉花糖塔高窄无斜撑会摇晃倒塌）：越大越容易侧倒。配合「连贯同向侧风」才能把无斜撑的塔真正剪塌" },
+    "MAX_SPAN": { "value": 340, "note": "单根构件最大跨度(px)。模拟材料长度有限：现实中一张纸/一根意面跨不过大河，超长必须分段并设中间支撑/桥墩" },
+    "MASS_DENSITY_K": { "value": 0.01, "note": "线密度→质量的换算系数：构件质量 = 长度 × 材料线密度 × 本系数。调大则结构自重更重（堆料更容易压垮自己）" },
+    "MASS_NODE_BASE": { "value": 0.6, "note": "每个自由节点的基础质量（连接件自重），不含构件分摊的部分" },
+    "MASS_PAYLOAD_K": { "value": 1.0, "note": "载荷质量系数：砝码质量 = payload.mass × 本系数。调大则砝码更重、承重挑战更难" },
+    "BUOY_K": { "value": 0.094, "note": "浮力系数：浮桶浮力加速度 = 吃水深度 × 本系数 ÷ 浮桶总质量。调小则浮桶更容易下沉" },
+    "LOAD_PRESS": { "value": 0.9, "note": "载荷接触刚度 0~1：每次约束迭代修正的穿透量比例。调小则砝码像浮在结构上（承重变简单），调大则接触更硬、承重挑战更难" }
+  },
+  "rubric": {
+    "_readme": "自动评价阈值（评价报告中的「自动」评级）：formsGood/formsPass=结构形式数量达优良/合格的标准；triRatioGood=三角形占构件比优良线；stressMarginGood=通过测试时最大应力利用率优良线（越小代表安全余量越大）；stockLeftGood=材料剩余率优良线；blueprintGood/blueprintPass=导出设计图张数达优良/合格的标准。",
+    "formsGood": 3,
+    "formsPass": 2,
+    "triRatioGood": 0.35,
+    "stressMarginGood": 0.85,
+    "stockLeftGood": 0.30,
+    "blueprintGood": 2,
+    "blueprintPass": 1
+  },
+  "score": {
+    "_readme": "实时综合评分权重（各项满分 100，加权求和为总分）。教师可按教学目标调整侧重；权重之和建议为 100。",
+    "wSafety": 30,
+    "wStiff": 20,
+    "wEcon": 15,
+    "wForm": 15,
+    "wFunc": 20,
+    "defRef": 70,
+    "note": "defRef = 刚度评分的允许变形基准(px)：结构最大节点位移达到该值时刚度项记 0 分。调小则对变形更严格。",
+    "triRef": 0.45,
+    "triCountRef": 6,
+    "stockRef": 0.3,
+    "note2": "triRef/triCountRef = 结构形式项的三角形占比 / 三角形个数满分线；stockRef = 用料项的剩余材料满分线。",
+    "gradeGood": 85,
+    "gradeOk": 70,
+    "gradePass": 55,
+    "failFactor": 0.45,
+    "note3": "failFactor = 测试失败时总分打的折扣（结构没过关，评分应明显低于通过者）。"
+  },
+  "submit": {
+    "_readme": "评价数据提交与排行榜。学生完成整个项目（全部关卡通过）后，自动把评价数据 POST 到 url；排行榜也从 url 拉取（url + '/all'）。rankBy 可选 height（最高值）或 score（综合评分）。",
+    "url": "https://quickform.cn/api/r5a3ly81xx",
+    "auto": true,
+    "rankBy": "height"
+  },
+  "difficulty": {
+    "_readme": "难度分档：入门/标准/挑战。影响载荷质量与材料库存（用来做课堂差异化）。",
+    "default": "standard",
+    "tiers": {
+      "easy": { "name": "入门", "payloadMul": 0.75, "stockMul": 1.25 },
+      "standard": { "name": "标准", "payloadMul": 1.0, "stockMul": 1.0 },
+      "hard": { "name": "挑战", "payloadMul": 1.25, "stockMul": 0.85 }
+    }
+  },
+  "materials": {
+    "paper": {
+      "name": "纸（折叠成梁）",
+      "color": "#e8dcc0",
+      "breakStrain": 0.05,
+      "stiff": 0.22,
+      "density": 0.08,
+      "maxSpan": 220,
+      "width": 7,
+      "cable": false,
+      "notes": "真实纸的拉伸强度不低，但受压极易屈曲。游戏中用较低的 stiff 与 breakStrain 体现折叠纸梁脆弱性。"
+    },
+    "wood": {
+      "name": "木梁",
+      "color": "#a9744f",
+      "breakStrain": 0.08,
+      "stiff": 0.50,
+      "density": 0.25,
+      "maxSpan": 380,
+      "width": 6,
+      "cable": false,
+      "notes": "对应松木/桐木条：E≈8~13 GPa，抗压≈30 MPa，抗拉≈60 MPa。"
+    },
+    "steel": {
+      "name": "钢梁",
+      "color": "#7a8a99",
+      "breakStrain": 0.12,
+      "stiff": 0.75,
+      "density": 0.60,
+      "maxSpan": 520,
+      "width": 5,
+      "cable": false,
+      "notes": "对应低碳钢：E≈200 GPa，屈服应变约 0.12%。"
+    },
+    "cable": {
+      "name": "钢索",
+      "color": "#d8a657",
+      "breakStrain": 0.25,
+      "stiff": 0.40,
+      "density": 0.18,
+      "width": 3,
+      "cable": true,
+      "notes": "只能受拉，抗压刚度视为 0。真实钢索 E≈150~190 GPa，断裂应变约 2%。"
+    },
+    "stick": {
+      "name": "意面/木棍",
+      "color": "#c79a6b",
+      "breakStrain": 0.06,
+      "stiff": 0.48,
+      "density": 0.18,
+      "maxSpan": 260,
+      "width": 5,
+      "cable": false,
+      "notes": "对应干意面/一次性木筷：E≈6~10 GPa，细长杆易失稳屈曲，单根能跨越的长度有限。"
+    },
+    "tape": {
+      "name": "胶带",
+      "color": "#f0c86e",
+      "breakStrain": 0.22,
+      "stiff": 0.15,
+      "density": 0.05,
+      "width": 4,
+      "cable": true,
+      "kind": "joint",
+      "angleK": 0.45,
+      "notes": "节点胶合材料：选中后点击节点使用，把交汇的构件粘牢——连接由铰接（可转动、一受力就散）变为刚接（抗弯）。缠得松，偏软，允许轻微转动；真实中正是用胶带把意面交叉点缠紧。"
+    },
+    "glue": {
+      "name": "粘胶/热熔胶",
+      "color": "#f4a3b8",
+      "breakStrain": 0.04,
+      "stiff": 0.85,
+      "density": 0.12,
+      "width": 4,
+      "cable": false,
+      "kind": "joint",
+      "angleK": 0.85,
+      "notes": "节点胶合材料：点击节点涂胶，固化后很硬、节点完全锁死（刚接刚度高于胶带），适合悬臂/塔等需要传递弯矩的节点。"
+    },
+    "string": {
+      "name": "细绳",
+      "color": "#d9b8a2",
+      "breakStrain": 0.18,
+      "stiff": 0.28,
+      "density": 0.06,
+      "width": 2,
+      "cable": true,
+      "notes": "棉线/尼龙线：只能受拉，强度低于钢索但更易打结。"
+    }
+  },
+  "levels": [
+    {
+      "name": "课程 0：纸桥承重",
+      "type": "bridge",
+      "desc": "峡谷很宽，单张纸的长度根本够不到对岸——材料长度有限，两点拉不通，必须分段。先把纸分段连起来，再给交汇节点「上胶」让桥面不散架，设桥墩/桁架把桥面撑住，最后让砝码落桥而不触地。",
+      "stock": { "paper": 26, "tape": 12, "glue": 0, "wood": 0, "steel": 0, "cable": 0, "stick": 0, "marshmallow": 0, "string": 0 },
+      "anchors": [{ "x": 0.16, "y": -210 }, { "x": 0.84, "y": -210 }],
+      "payload": { "x": 0.5, "y": -470, "mass": 5, "delay": 50, "radius": 15, "holdFrames": 300 },
+      "pass": { "maxBrokenRatio": 0.5, "payloadGround": false }
+    },
+    {
+      "name": "课程 1：棉花糖高塔（经典挑战）",
+      "type": "tower",
+      "desc": "三维挑战（官方 Marshmallow Challenge 规则）：20 根意面 + 胶带 + 细绳，把唯一一颗棉花糖架到塔顶。棉花糖像「粘胶」一样粘在塔顶、把顶部几根杆件连成一体，但它比看起来重得多——塔越高越窄，越容易被它压得失稳倒下。点「测试」= 松手：没有重物砸下来，只看塔能不能自己站住；只要塔不倒就算过关，系统记录你搭出的最高值（桌面→棉花糖顶的高度）。拖动空白处可旋转视角看三维形体。",
+      "stock": { "paper": 0, "tape": 8, "glue": 0, "wood": 0, "steel": 0, "cable": 0, "stick": 20, "marshmallow": 0, "string": 6 },
+      "anchors": [],
+      "targetHeight": 240,
+      "payload": { "x": 0.5, "y": -999, "mass": 1, "delay": 0, "radius": 11, "holdFrames": 300 },
+      "pass": { "maxBrokenRatio": 0.5 }
+    },
+    {
+      "name": "课程 2：设计并搭建浮桥",
+      "type": "floating",
+      "desc": "在三只浮桶上架桥，把木棍分段搭到桶顶并上胶固定。浮桶的浮力有限：工程师(砝码)站上桥面后，浮桶会明显下沉——用料越多桥越重，沉得越深。桥面没入水中或浮桶沉到河床都算失败。",
+      "stock": { "paper": 0, "tape": 8, "glue": 0, "wood": 0, "steel": 0, "cable": 0, "stick": 18, "marshmallow": 0, "string": 8 },
+      "anchors": [],
+      "buckets": [{ "x": 0.25, "y": 0 }, { "x": 0.5, "y": 0 }, { "x": 0.75, "y": 0 }],
+      "waterY": -70,
+      "payload": { "x": 0.5, "y": -300, "mass": 6, "delay": 80, "radius": 18, "holdFrames": 220 },
+      "pass": { "maxBrokenRatio": 0.5, "payloadGround": false, "maxSink": 20 }
+    },
+    {
+      "name": "课程 3：悬臂结构的稳定性",
+      "type": "cantilever",
+      "desc": "像塔吊一样：把悬臂从左侧高台向右挑出，末端用钢索悬挂砝码。固定端需要同一竖直线上、一上一下两个固定点（就像木条夹在桌沿）才抗得住弯矩；悬臂根部弯矩最大——汇交节点上胶（刚接）是关键。载荷从挂钩点上方垂下，会真实拉扯悬臂端部，而不是凭空落在半空中。",
+      "stock": { "paper": 0, "tape": 5, "glue": 3, "wood": 0, "steel": 0, "cable": 0, "stick": 20, "marshmallow": 0, "string": 4 },
+      "anchors": [{ "x": 0.2, "y": -150 }, { "x": 0.2, "y": -240 }],
+      "payload": { "x": 0.45, "y": -999, "mass": 3, "delay": 0, "radius": 15, "holdFrames": 220, "cableLen": 12 },
+      "pass": { "maxBrokenRatio": 0.4, "payloadGround": false }
+    }
+  ]
+}
