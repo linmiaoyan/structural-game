@@ -556,6 +556,15 @@ let mouse = { x:0, y:0, down:false };
 let dragStart = null;
 let previewEnd = null;
 let impulses = [];
+let fxList = [];
+
+function addFxRing(x, y, z=0, color='#f0c86e'){
+  fxList.push({ type: 'ring', x, y, z, color, r: 6, maxR: 32, alpha: 1 });
+}
+
+function addFxLine(a, b, color='#d9b8a2'){
+  fxList.push({ type: 'line', a, b, color, alpha: 1 });
+}
 
 let payload = null;
 let testFrames = 0;
@@ -669,6 +678,9 @@ function addBeam(a, b, mat, free=false){
   beamErr = '';
   if (!free && !currentLevel.free) stock[mat]--;
   beams.push({ a, b, rest: d3(a,b), broken:false, mat, cable: MATERIALS[mat].cable });
+  addFxLine(a, b, MATERIALS[mat].color);
+  addFxRing(a.x, a.y, a.z||0, MATERIALS[mat].color);
+  addFxRing(b.x, b.y, b.z||0, MATERIALS[mat].color);
   if (!free && !currentLevel.free) refreshMaterialBar();
   return true;
 }
@@ -755,6 +767,7 @@ function toggleGlue(n){
     if (!currentLevel.free && stock[currentMat] <= 0){ setTip(m.name + '库存不足！'); return false; }
     n.glued = currentMat;
     if (!currentLevel.free) stock[currentMat]--;
+    addFxRing(n.x, n.y, n.z||0, MATERIALS[currentMat].color || '#f0c86e');
     setTip('已用' + m.name + '胶合该节点——交汇构件现在抗弯，测试时不会转动散架。再点一次可解除。');
   }
   pushHistory();
@@ -1726,6 +1739,18 @@ function render(){
   for (const im of impulses){
     ctx.strokeStyle = `rgba(224,72,58,${im.life})`; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(im.x, im.y, im.r, 0, Math.PI*2); ctx.stroke();
+  }
+
+  for (const fx of fxList){
+    ctx.save();
+    if (fx.type === 'ring'){
+      ctx.strokeStyle = fx.color; ctx.globalAlpha = Math.max(0, fx.alpha); ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI*2); ctx.stroke();
+    } else if (fx.type === 'line' && fx.a && fx.b){
+      ctx.strokeStyle = fx.color; ctx.globalAlpha = Math.max(0, fx.alpha); ctx.lineWidth = 5 * fx.alpha;
+      ctx.beginPath(); ctx.moveTo(fx.a.x, fx.a.y); ctx.lineTo(fx.b.x, fx.b.y); ctx.stroke();
+    }
+    ctx.restore();
   }
 
   if (payload){
@@ -2723,14 +2748,17 @@ function t3OnUp(m){
     }
     return;
   }
-  /* 空白处拖动：在桌面上生成一个新节点作为落脚点 */
-  if (moved){
-    const B = t3Cam();
-    const gp = t3HitGround(m.x, m.y, B);
-    if (!gp){ setTip('请向上拖动视角，让桌面出现在画面里，再在桌面上点下一个落点。'); return; }
-    if (Math.hypot(gp.x, gp.z) > T3CFG.tableR){ setTip('那已经超出桌面范围了，请在桌面以内落脚。'); return; }
+  /* 点击或拖放：在桌面上生成一个新节点作为落脚点 */
+  const B = t3Cam();
+  const gp = t3HitGround(m.x, m.y, B);
+  if (gp && Math.hypot(gp.x, gp.z) <= T3CFG.tableR){
     const n = addNode(gp.x, 0, false, { z: gp.z });
     pushHistory(); logEvent('build', { mat: 'base' });
+    setTip('已在桌面上生成落脚节点，按住它可拖出构件或与其它节点相连。');
+  } else if (!gp){
+    setTip('请向上拖动视角，让桌面出现在画面里，再在桌面上点击落脚。');
+  } else {
+    setTip('那已经超出桌面范围了，请在桌面以内落脚。');
   }
 }
 
@@ -3001,6 +3029,24 @@ function t3Render(){
     }
   }
 
+  for (const fx of fxList){
+    ctx.save();
+    if (fx.type === 'ring'){
+      const p = t3Project({ x: fx.x, y: fx.y, z: fx.z||0 }, B);
+      if (p){
+        ctx.strokeStyle = fx.color; ctx.globalAlpha = Math.max(0, fx.alpha); ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(2, fx.r * (900 / p.z)), 0, Math.PI*2); ctx.stroke();
+      }
+    } else if (fx.type === 'line' && fx.a && fx.b){
+      const pa = t3Project(fx.a, B), pb = t3Project(fx.b, B);
+      if (pa && pb){
+        ctx.strokeStyle = fx.color; ctx.globalAlpha = Math.max(0, fx.alpha); ctx.lineWidth = 5 * fx.alpha;
+        ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   t3DrawNodes(B);
   t3DrawMarsh(B);
   t3DrawMeasure(B);
@@ -3252,10 +3298,11 @@ function t3Template(){
   pushHistory();
   t3ResetField();
   const ok = t3TrussTower({ R0: 105, R1: 65, y1: 130, apexY: 205, extraDiag: true });
+  glueAllJoints();
   if (!ok){ setTip('当前没有可用的结构材料。'); return; }
   t3SnapshotBuild();
   t3FitView();
-  setTip('起步塔已就位（约 220px，仍低于 240px 目标）：拖动空白处转视角看看它的三棱形体，再往上加高、往上收窄，并把交叉斜撑加密。');
+  setTip('起步塔已就位并自动上胶（约 220px，仍低于 240px 目标）：拖动空白处转视角看看它的三棱形体，再往上加高、往上收窄，并把交叉斜撑加密。');
 }
 
 /* 参考答案：加高一档并补满双向斜撑（教师面板「载入参考答案」） */
@@ -3799,6 +3846,12 @@ function loop(){
     for (const im of impulses){ im.r += 9; im.life -= 0.04; }
     impulses = impulses.filter(im => im.life > 0 && im.r < im.max);
   }
+  for (const fx of fxList){
+    fx.r += 1.8;
+    fx.alpha -= 0.04;
+  }
+  fxList = fxList.filter(fx => fx.alpha > 0);
+
   render();
   updateScoreHud();
   requestAnimationFrame(loop);
