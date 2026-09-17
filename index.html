@@ -1593,7 +1593,11 @@ function drawEnvironment(){
     ctx.fillRect(0, groundY, W, H - groundY);
     return;
   }
-  const anchors = getAnchors();
+  // 使用关卡预设锚点（两岸高地/基座），避免构件中新增或模板生成的固定节点触发多余地基
+  const anchors = (L.anchors && L.anchors.length)
+    ? L.anchors.map(a => ({ x: a.x * W, y: groundY + a.y })).sort((a,b) => a.x - b.x)
+    : getAnchors();
+
   // 跨越的水域（桥 / 悬索 / 悬臂）：下为深水，贴近水线有一圈浅滩，桥墩可立于滩上
   if (L.type !== 'tower' && anchors.length >= 1){
     let x0 = anchors[0].x;
